@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mastermind/Widget/Board.dart';
-import 'Widget/Combination.dart';
 
 void main() {
   runApp(const MyApp());

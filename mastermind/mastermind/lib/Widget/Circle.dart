@@ -1,29 +1,28 @@
+// ignore_for_file: unnecessary_this
+
 import 'package:flutter/material.dart';
 
-
 class Circle extends StatelessWidget {
-  int n_th;
-  int 
-  const Circle(this.color);
+  Color color;
+  double x;
+  double y;
+  Circle(this.x, this.y, this.color, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: InkWell(
-                              onTap: () {},
-                              child: CustomPaint(
-                                size: const Size(70, 70),
-                                painter: CirclePainter(
-                                    controller.currenCombination[i]),
-                              )));
+        padding: const EdgeInsets.all(10.0),
+        child: CustomPaint(
+          size: Size(this.x, this.y),
+          painter: CirclePainter(color),
+        ));
   }
 }
 
 class CirclePainter extends CustomPainter {
   Color colors;
 
-  CirclePainter(Color this.colors);
+  CirclePainter(this.colors);
   @override
   void paint(Canvas canvas, Size size) {
     final _paint = Paint()
@@ -40,5 +39,3 @@ class CirclePainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
-
-sta

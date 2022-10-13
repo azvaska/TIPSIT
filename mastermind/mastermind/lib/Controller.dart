@@ -13,7 +13,6 @@ class Controller {
     Colors.yellow,
     Colors.white,
     Colors.green,
-    Colors.cyan,
     Colors.black
   ];
   genCombination() {

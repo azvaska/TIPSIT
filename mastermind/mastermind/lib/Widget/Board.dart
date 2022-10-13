@@ -4,6 +4,9 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:mastermind/Controller.dart';
 
 import 'Circle.dart';
+import 'Colorpicker.dart';
+import 'EmptyRow.dart';
+import 'Rows.dart';
 
 class Board extends StatefulWidget {
   const Board({super.key});
@@ -14,7 +17,14 @@ class Board extends StatefulWidget {
 
 class _BoardState extends State<Board> {
   var controller = Controller();
+  var board_s = [];
   Color selectedColor = Colors.black;
+  void color_picked(Color C) {
+    setState(() {
+      selectedColor = C;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -29,26 +39,8 @@ class _BoardState extends State<Board> {
               decoration: const BoxDecoration(
                 color: Colors.amber,
               ),
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: List.generate(
-                      4,
-                      (i) => ).toList())),
-          ListTile(
-            title: const Text('Item 1'),
-            onTap: () {
-              // Update the state of the app.
-              // ...
-            },
-          ),
-          ListTile(
-            title: const Text('Item 2'),
-            onTap: () {
-              // Update the state of the app.
-              // ...
-            },
-          ),
+              child: ColorPicker(color_picked)),
+          const Rows(),
         ],
       ),
     );
