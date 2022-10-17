@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-class WinLost extends StatelessWidget {
+class WinLost {
   final Function restart;
-  const WinLost(this.restart, bool win, {super.key});
+  bool win = false;
+  WinLost(this.restart, this.win);
   showAlertDialog(BuildContext context) {
     // set up the buttons
     Widget resetButton = TextButton(
@@ -12,15 +13,18 @@ class WinLost extends StatelessWidget {
         Navigator.of(context).pop();
       },
     );
-
+    Widget cancelButton = TextButton(
+      child: Text("Restart"),
+      onPressed: () {
+        restart();
+        Navigator.of(context).pop();
+      },
+    );
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
-      title: Text("AlertDialog"),
-      content: Text(
-          "Would you like to continue learning how to use Flutter alerts?"),
-      actions: [
-        resetButton,
-      ],
+      title: Text("You ${win ? 'Win' : 'Lost'}"),
+      content: const Text("Do you want to restart ?"),
+      actions: [resetButton, cancelButton],
     );
 
     // show the dialog
@@ -30,10 +34,5 @@ class WinLost extends StatelessWidget {
         return alert;
       },
     );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Text('sus');
   }
 }

@@ -18,7 +18,7 @@ class _BoardState extends State<Board> {
   int nRows = 1;
   bool done = false;
   bool win = false;
-  static const int nMaxRows = 5;
+  static const int nMaxRows = 9;
   late List<List<Color>> combinations;
   List<Widget> BoardRowsWidgets = [];
   Color selectedColor = Colors.black;

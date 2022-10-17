@@ -28,7 +28,7 @@ class Controller {
     var rng = Random();
     var numbers = [];
     for (var i = 0; i < 4; i++) {
-      int rngs = rng.nextInt(7);
+      int rngs = rng.nextInt(6);
       numbers.add(rngs);
       if (numbers.where((e) => e == rngs).length > 1) {
         i--;
