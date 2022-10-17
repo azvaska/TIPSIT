@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'Widget/Exceptions.dart';
+import 'dart:math';
 
 class Controller {
   static const int nCombination = 4;
@@ -17,15 +18,26 @@ class Controller {
     Colors.black
   ];
   static const List<Color> defaultHintsColor = [
-    Colors.black,
-    Colors.black,
-    Colors.black,
-    Colors.black
+    Colors.pink,
+    Colors.pink,
+    Colors.pink,
+    Colors.pink
   ];
   genCombination() {
-    var comb = currenCombination = List.from(colors);
+    var comb = [];
+    var rng = Random();
+    var numbers = [];
+    for (var i = 0; i < 4; i++) {
+      int rngs = rng.nextInt(7);
+      numbers.add(rngs);
+      if (numbers.where((e) => e == rngs).length > 1) {
+        i--;
+        numbers.removeLast();
+        continue;
+      }
+      comb.add(colors[rngs]);
+    }
     comb.shuffle();
-    comb = comb.sublist(0, 4);
     currenCombination = comb;
     for (Color c in currenCombination) {
       print(c);

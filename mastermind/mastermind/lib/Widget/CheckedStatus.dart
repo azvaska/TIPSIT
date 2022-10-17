@@ -10,7 +10,7 @@ class CheckedStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: checked
+      child: checked && hints.isNotEmpty
           ? Hints(hints)
           : Container(
               width: 55.0,
