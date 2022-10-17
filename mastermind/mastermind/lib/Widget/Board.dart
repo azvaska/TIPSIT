@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:mastermind/Controller.dart';
-
-import 'Circle.dart';
+import 'package:flutter/foundation.dart';
+import 'package:mastermind/Widget/Exceptions.dart';
 import 'Colorpicker.dart';
-import 'EmptyRow.dart';
-import 'Rows.dart';
+import 'CombinationRow.dart';
 
 class Board extends StatefulWidget {
   const Board({super.key});
@@ -17,17 +14,61 @@ class Board extends StatefulWidget {
 
 class _BoardState extends State<Board> {
   var controller = Controller();
-  var board_s = [];
+  int nRows = 1;
+  static const int nMaxRows = 9;
+  late List<List<Color>> combinations;
+  List<Widget> BoardRowsWidgets = [];
   Color selectedColor = Colors.black;
   void color_picked(Color C) {
+    print(C);
     setState(() {
       selectedColor = C;
     });
   }
 
+  void circle_selected(int i, int y) {
+    setState(() {
+      combinations[i][y] = selectedColor;
+      BoardRowsWidgets[i] = CombinationRow(
+          combinations[i], i, circle_selected, checkCombination,
+          key: UniqueKey());
+    });
+  }
+
+  List<Color> checkCombination(int i) {
+    try {
+      var colors = controller.checkColors(combinations[i]);
+      if (i + 1 == nMaxRows) {
+        //Lost
+        return [];
+      }
+      setState(() {
+        BoardRowsWidgets.add(CombinationRow(
+            combinations[i + 1], i + 1, circle_selected, checkCombination,
+            key: UniqueKey()));
+      });
+      return colors;
+    } on WinException {
+      //WIN
+      return [];
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    combinations = [];
+    combinations.addAll(List.generate(nMaxRows,
+        (index) => [Colors.grey, Colors.grey, Colors.grey, Colors.grey]));
+    BoardRowsWidgets.add(CombinationRow(
+        combinations[0], 0, circle_selected, checkCombination,
+        key: UniqueKey()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
+      backgroundColor: Colors.blueGrey,
       // Add a ListView to the drawer. This ensures the user can scroll
       // through the options in the drawer if there isn't enough vertical
       // space to fit everything.
@@ -35,12 +76,21 @@ class _BoardState extends State<Board> {
         // Important: Remove any padding from the ListView.
         padding: EdgeInsets.zero,
         children: [
-          DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.amber,
-              ),
-              child: ColorPicker(color_picked)),
-          const Rows(),
+          SizedBox(
+              height: 150.0,
+              child: DrawerHeader(
+                  decoration: const BoxDecoration(
+                    color: Colors.amber,
+                  ),
+                  margin: const EdgeInsets.all(0.0),
+                  padding: const EdgeInsets.fromLTRB(0.0, 30.0, 0.0, 0.0),
+                  child: ColorPicker(color_picked))),
+          ListView(
+              padding: const EdgeInsets.all(0.0),
+              shrinkWrap: true,
+              physics: const AlwaysScrollableScrollPhysics(), // new
+              //children: List<Widget>.of(BoardRowsWidgets)),
+              children: List.generate(90, (index) => Text('SUS'))),
         ],
       ),
     );

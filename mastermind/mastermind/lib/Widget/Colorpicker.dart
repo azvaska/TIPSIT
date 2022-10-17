@@ -18,6 +18,6 @@ class ColorPicker extends StatelessWidget {
             Controller.colors.length,
             (i) => InkWell(
                 onTap: () => {color_picker(Controller.colors[i])},
-                child: Circle(55, 55, Controller.colors[i]))).toList());
+                child: Circle(45, 45, Controller.colors[i]))).toList());
   }
 }
