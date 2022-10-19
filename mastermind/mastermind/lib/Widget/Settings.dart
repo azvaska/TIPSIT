@@ -1,71 +1,74 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
+import 'dart:io';
 import 'package:settings_ui/settings_ui.dart';
-class Settings extends StatelessWidget {
-  const Settings({super.key});
+import 'package:flutter/material.dart';
+
+class Settings extends StatefulWidget {
+  const Settings({Key? key}) : super(key: key);
 
   @override
+  State<Settings> createState() => _SettingsState();
+}
+
+class _SettingsState extends State<Settings> {
+  TextStyle headingStyle = const TextStyle(
+      fontSize: 16, fontWeight: FontWeight.w600, color: Colors.red);
+  bool allowDuplicates = true;
+  bool notificationsEnabled = true;
+  int nRows = 5;
+  @override
   Widget build(BuildContext context) {
-    return    SettingsList(
-        sections: [
-          SettingsSection(
-            title: Text('General'),
-            tiles: [
-              SettingsTile.navigation(
-                title: Text('Abstract settings screen'),
-                leading: Icon(CupertinoIcons.wrench),
-                description: Text('UI created to show plugin\'s possibilities'),
-                onPressed: (context) {
-                  Navigation.navigateTo(
-                    context: context,
-                    screen: CrossPlatformSettingsScreen(),
-                    style: NavigationRouteStyle.material,
-                  );
-                },
-              )
-            ],
-          ),
-          SettingsSection(
-            title: Text('Replications'),
-            tiles: [
-              SettingsTile.navigation(
-                leading: Icon(CupertinoIcons.settings),
-                title: Text('iOS Developer Screen'),
-                onPressed: (context) {
-                  Navigation.navigateTo(
-                    context: context,
-                    screen: IosDeveloperScreen(),
-                    style: NavigationRouteStyle.cupertino,
-                  );
-                },
+    var height = MediaQuery.of(context).viewPadding.top;
+    return Scaffold(
+        backgroundColor: Colors.blueGrey,
+        body: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(0.0, height, 0.0, 0.0),
+              child: const Align(
+                  alignment: Alignment.centerLeft, child: BackButton()),
+            ),
+            Expanded(
+                child: SettingsList(
+              lightTheme: const SettingsThemeData(
+                settingsListBackground: Color.fromARGB(255, 184, 196, 201),
               ),
-              SettingsTile.navigation(
-                leading: Icon(Icons.settings),
-                title: Text('Android Settings Screen'),
-                onPressed: (context) {
-                  Navigation.navigateTo(
-                    context: context,
-                    screen: AndroidSettingsScreen(),
-                    style: NavigationRouteStyle.material,
-                  );
-                },
-              ),
-              SettingsTile.navigation(
-                leading: Icon(Icons.web),
-                title: Text('Web Settings'),
-                onPressed: (context) {
-                  Navigation.navigateTo(
-                    context: context,
-                    screen: WebChromeSettings(),
-                    style: NavigationRouteStyle.material,
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
-      
+              sections: [
+                SettingsSection(
+                  title: const Text('Common'),
+                  tiles: [
+                    SettingsTile.switchTile(
+                      title: const Text('Allow duplicates'),
+                      description: const Text(
+                          'Allow the presence of duplicated colors in the combination'),
+                      leading: const Icon(Icons.hail),
+                      onToggle: (bool value) {
+                        setState(() {
+                          allowDuplicates = value;
+                        });
+                      },
+                      initialValue: allowDuplicates,
+                    ),
+                    SettingsTile(
+                      title: const Text('Rows'),
+                      value: Slider(
+                        min: 1,
+                        max: 15,
+                        onChanged: (double value) {
+                          setState(() {
+                            nRows = value.toInt();
+                            print(nRows);
+                          });
+                        },
+                        value: nRows.toDouble(),
+                      ),
+                      leading: const Icon(Icons.list),
+                      trailing: Text(nRows.toString()),
+                    ),
+                  ],
+                ),
+              ],
+            ))
+          ],
+        ));
   }
 }

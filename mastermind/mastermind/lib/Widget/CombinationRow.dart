@@ -51,7 +51,7 @@ class _CombinationRowState extends State<CombinationRow> {
           child: CheckedStatus(checked, hints),
         )));
     return IgnorePointer(
-      ignoring: checked, // or false
+      ignoring: checked,
       child: Row(children: valueRow),
     );
   }

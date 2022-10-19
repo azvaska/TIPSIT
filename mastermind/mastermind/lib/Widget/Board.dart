@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mastermind/Controller.dart';
-import 'package:flutter/foundation.dart';
 import 'package:mastermind/Widget/Exceptions.dart';
+import 'package:mastermind/Widget/Settings.dart';
 import 'package:mastermind/Widget/WinLost.dart';
 import 'Colorpicker.dart';
 import 'CombinationRow.dart';
-import 'package:settings_ui/settings_ui.dart';
+import 'package:flutter/services.dart';
 
 class Board extends StatefulWidget {
   const Board({super.key});
@@ -81,6 +81,9 @@ class _BoardState extends State<Board> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+    ));
     combinations = [];
     combinations.addAll(List.generate(nMaxRows,
         (index) => [Colors.grey, Colors.grey, Colors.grey, Colors.grey]));
@@ -98,18 +101,19 @@ class _BoardState extends State<Board> {
       done = false;
       win = false;
     }
-    return Drawer(
+    var height = MediaQuery.of(context).viewPadding.top;
+    return Scaffold(
       backgroundColor: Colors.blueGrey,
-      child: Column(
+      body: Column(
         children: [
           SizedBox(
-              height: 150.0,
-              child: DrawerHeader(
+              height: 120.0,
+              child: Container(
                   decoration: const BoxDecoration(
                     color: Colors.amber,
                   ),
                   margin: const EdgeInsets.all(0.0),
-                  padding: const EdgeInsets.fromLTRB(0.0, 30.0, 0.0, 0.0),
+                  padding: EdgeInsets.fromLTRB(0.0, height, 0.0, 0.0),
                   child: ColorPicker(color_picked))),
           // ...List<Widget>.of(BoardRowsWidgets),
           Expanded(
@@ -118,18 +122,18 @@ class _BoardState extends State<Board> {
                   shrinkWrap: true,
                   children:
                       List<Widget>.of(BoardRowsWidgets).reversed.toList())),
-          SizedBox(
-              height: 50,
-              child: Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    icon: const Icon(Icons.volume_up),
-                    tooltip: 'Increase volume by 10',
-                    onPressed: () {
-                      print('SUS');
-                    },
-                  ))),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const Settings(),
+              ));
+        },
+        backgroundColor: Colors.black,
+        child: const Icon(Icons.settings),
       ),
     );
   }
