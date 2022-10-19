@@ -5,10 +5,11 @@ import 'dart:math';
 
 class Controller {
   static const int nCombination = 4;
+  bool debug = false;
   Controller() {
     genCombination();
   }
-  var currenCombination = [];
+  List<Color> currenCombination = [];
   static const List<Color> colors = [
     Colors.blue,
     Colors.red,
@@ -17,50 +18,58 @@ class Controller {
     Colors.green,
     Colors.black
   ];
-  static const List<Color> defaultHintsColor = [
-    Colors.pink,
-    Colors.pink,
-    Colors.pink,
-    Colors.pink
-  ];
+
   genCombination() {
-    var comb = [];
+    List<Color> comb = [];
     var rng = Random();
-    var numbers = [];
     for (var i = 0; i < 4; i++) {
       int rngs = rng.nextInt(6);
-      numbers.add(rngs);
-      if (numbers.where((e) => e == rngs).length > 1) {
-        i--;
-        numbers.removeLast();
-        continue;
-      }
+      // numbers.add(rngs);
+      // if (numbers.where((e) => e == rngs).length > 1) {
+      //   i--;
+      //   numbers.removeLast();
+      //   continue;
+      // }
       comb.add(colors[rngs]);
     }
     comb.shuffle();
     currenCombination = comb;
-    for (Color c in currenCombination) {
-      print(c);
-    }
+    // for (Color c in currenCombination) {
+    //   print(c.toString());
+    // }
   }
 
   checkColors(List<Color> guess) {
-    List<Color> hints = List.from(defaultHintsColor);
+    var hints = <dynamic, dynamic>{};
+    List<Color> hintsC = [];
     int nRight = 0;
     for (var i = 0; i < currenCombination.length; i++) {
-      // Correct color & position
+      // Correct color and position
       if (guess[i] == currenCombination[i]) {
-        // Use RED since board has a dark background
-        hints[i] = Colors.green;
         nRight++;
-      } // Correct color, wrong position
+        if (hints[guess[i]] == Colors.green) {
+          hintsC.add(Colors.white);
+          continue;
+        }
+        hints[guess[i]] = Colors.green;
+      } // Correct color wrong position
       else if (currenCombination.contains(guess[i])) {
-        hints[i] = Colors.white;
+        hints[guess[i]] = Colors.white;
       }
     }
     if (nRight == nCombination) {
       throw WinException('WIN');
     }
-    return hints;
+    List<Color> cols = [];
+    hints.values.toList().forEach((item) => cols.add(item));
+    cols.addAll(hintsC);
+    int nulls = currenCombination.length - cols.length;
+    for (var i = 0; i < nulls; i++) {
+      cols.add(Colors.black);
+    }
+    if (debug) {
+      cols = currenCombination;
+    }
+    return cols;
   }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class WinLost {
   final Function restart;
-  bool win = false;
+  bool win;
   WinLost(this.restart, this.win);
   showAlertDialog(BuildContext context) {
     // set up the buttons
@@ -13,18 +13,11 @@ class WinLost {
         Navigator.of(context).pop();
       },
     );
-    Widget cancelButton = TextButton(
-      child: Text("Restart"),
-      onPressed: () {
-        restart();
-        Navigator.of(context).pop();
-      },
-    );
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
       title: Text("You ${win ? 'Win' : 'Lost'}"),
-      content: const Text("Do you want to restart ?"),
-      actions: [resetButton, cancelButton],
+      content: Text("${win ? 'Good' : 'Do a better'} job"),
+      actions: [resetButton],
     );
 
     // show the dialog

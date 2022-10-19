@@ -23,7 +23,6 @@ class _BoardState extends State<Board> {
   List<Widget> BoardRowsWidgets = [];
   Color selectedColor = Colors.black;
   void color_picked(Color C) {
-    print(C);
     setState(() {
       selectedColor = C;
     });
@@ -58,6 +57,7 @@ class _BoardState extends State<Board> {
         setState(() {
           done = true;
         });
+        controller.genCombination();
         return [];
       }
       setState(() {
@@ -68,6 +68,7 @@ class _BoardState extends State<Board> {
       return colors;
     } on WinException {
       //WIN
+      controller.genCombination();
       setState(() {
         win = true;
         done = true;
@@ -90,8 +91,9 @@ class _BoardState extends State<Board> {
   @override
   Widget build(BuildContext context) {
     if (done) {
+      bool wins = win ? true : false;
       Future.delayed(
-          Duration.zero, () => WinLost(restart, win).showAlertDialog(context));
+          Duration.zero, () => WinLost(restart, wins).showAlertDialog(context));
       done = false;
       win = false;
     }
