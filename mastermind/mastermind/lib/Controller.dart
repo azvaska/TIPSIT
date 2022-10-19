@@ -33,6 +33,7 @@ class Controller {
       comb.add(colors[rngs]);
     }
     comb.shuffle();
+    comb = [Colors.black, Colors.black, Colors.black, Colors.yellow];
     currenCombination = comb;
     // for (Color c in currenCombination) {
     //   print(c.toString());
@@ -42,20 +43,26 @@ class Controller {
   checkColors(List<Color> guess) {
     var hints = <dynamic, dynamic>{};
     List<Color> hintsC = [];
+    List<Color> localCombination = List.from(currenCombination);
     int nRight = 0;
     for (var i = 0; i < currenCombination.length; i++) {
       // Correct color and position
       if (guess[i] == currenCombination[i]) {
         nRight++;
         if (hints[guess[i]] == Colors.green) {
-          hintsC.add(Colors.white);
-          continue;
+          hintsC.add(Colors.green);
+        } else {
+          hints[guess[i]] = Colors.green;
         }
-        hints[guess[i]] = Colors.green;
       } // Correct color wrong position
-      else if (currenCombination.contains(guess[i])) {
-        hints[guess[i]] = Colors.white;
+      else if (localCombination.contains(guess[i])) {
+        if (hints[guess[i]] == Colors.green) {
+          hintsC.add(Colors.white);
+        } else {
+          hints[guess[i]] = Colors.white;
+        }
       }
+      localCombination.remove(guess[i]);
     }
     if (nRight == nCombination) {
       throw WinException('WIN');

@@ -5,6 +5,7 @@ import 'package:mastermind/Widget/Exceptions.dart';
 import 'package:mastermind/Widget/WinLost.dart';
 import 'Colorpicker.dart';
 import 'CombinationRow.dart';
+import 'package:settings_ui/settings_ui.dart';
 
 class Board extends StatefulWidget {
   const Board({super.key});
@@ -99,9 +100,6 @@ class _BoardState extends State<Board> {
     }
     return Drawer(
       backgroundColor: Colors.blueGrey,
-      // Add a ListView to the drawer. This ensures the user can scroll
-      // through the options in the drawer if there isn't enough vertical
-      // space to fit everything.
       child: Column(
         children: [
           SizedBox(
@@ -120,6 +118,17 @@ class _BoardState extends State<Board> {
                   shrinkWrap: true,
                   children:
                       List<Widget>.of(BoardRowsWidgets).reversed.toList())),
+          SizedBox(
+              height: 50,
+              child: Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    icon: const Icon(Icons.volume_up),
+                    tooltip: 'Increase volume by 10',
+                    onPressed: () {
+                      print('SUS');
+                    },
+                  ))),
         ],
       ),
     );
