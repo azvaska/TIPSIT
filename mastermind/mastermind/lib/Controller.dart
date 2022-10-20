@@ -6,7 +6,8 @@ import 'dart:math';
 class Controller {
   static const int nCombination = 4;
   bool debug = false;
-  Controller() {
+  bool duplicates;
+  Controller(this.duplicates) {
     genCombination();
   }
   List<Color> currenCombination = [];
@@ -21,15 +22,19 @@ class Controller {
 
   genCombination() {
     List<Color> comb = [];
+    List<int> numbers = [];
+
     var rng = Random();
     for (var i = 0; i < 4; i++) {
       int rngs = rng.nextInt(6);
-      // numbers.add(rngs);
-      // if (numbers.where((e) => e == rngs).length > 1) {
-      //   i--;
-      //   numbers.removeLast();
-      //   continue;
-      // }
+      if (!duplicates) {
+        numbers.add(rngs);
+        if (numbers.where((e) => e == rngs).length > 1) {
+          i--;
+          numbers.removeLast();
+          continue;
+        }
+      }
       comb.add(colors[rngs]);
     }
     comb.shuffle();

@@ -8,14 +8,16 @@ import 'CombinationRow.dart';
 import 'package:flutter/services.dart';
 
 class Board extends StatefulWidget {
-  const Board({super.key});
+  final int nMaxRows;
+  final bool duplicates;
+  const Board({super.key, this.nMaxRows = 9, this.duplicates = true});
 
   @override
   State<Board> createState() => _BoardState();
 }
 
 class _BoardState extends State<Board> {
-  var controller = Controller();
+  late var controller;
   int nRows = 1;
   bool done = false;
   bool win = false;
@@ -41,8 +43,10 @@ class _BoardState extends State<Board> {
 
   void restart() {
     setState(() {
+      done = false;
+      win = false;
       combinations = [];
-      combinations.addAll(List.generate(nMaxRows,
+      combinations.addAll(List.generate(widget.nMaxRows,
           (index) => [Colors.grey, Colors.grey, Colors.grey, Colors.grey]));
       BoardRowsWidgets = [];
       BoardRowsWidgets.add(CombinationRow(
@@ -54,7 +58,7 @@ class _BoardState extends State<Board> {
   List<Color> checkCombination(int i) {
     try {
       var colors = controller.checkColors(combinations[i]);
-      if (i + 1 == nMaxRows) {
+      if (i + 1 == widget.nMaxRows) {
         //Lost
         setState(() {
           done = true;
@@ -82,48 +86,59 @@ class _BoardState extends State<Board> {
   @override
   void initState() {
     super.initState();
+    controller = Controller(widget.duplicates);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
     ));
-    combinations = [];
-    combinations.addAll(List.generate(nMaxRows,
-        (index) => [Colors.grey, Colors.grey, Colors.grey, Colors.grey]));
-    BoardRowsWidgets.add(CombinationRow(
-        combinations[0], 0, circle_selected, checkCombination,
-        key: UniqueKey()));
+
+    restart();
   }
 
   @override
   Widget build(BuildContext context) {
     if (done) {
-      bool wins = win ? true : false;
       Future.delayed(
-          Duration.zero, () => WinLost(restart, wins).showAlertDialog(context));
-      done = false;
-      win = false;
+          Duration.zero, () => WinLost(restart, win).showAlertDialog(context));
     }
     var height = MediaQuery.of(context).viewPadding.top;
-    return Scaffold(
-      backgroundColor: Colors.blueGrey,
-      body: Column(
-        children: [
-          SizedBox(
-              height: 120.0,
-              child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.amber,
-                  ),
-                  margin: const EdgeInsets.all(0.0),
-                  padding: EdgeInsets.fromLTRB(0.0, height, 0.0, 0.0),
-                  child: ColorPicker(color_picked))),
-          // ...List<Widget>.of(BoardRowsWidgets),
-          Expanded(
-              child: ListView(
-                  padding: const EdgeInsets.all(0.0),
-                  shrinkWrap: true,
-                  children:
-                      List<Widget>.of(BoardRowsWidgets).reversed.toList())),
-        ],
+    return Stack(children: [
+      Scaffold(
+        backgroundColor: Colors.blueGrey,
+        body: Column(
+          children: [
+            SizedBox(
+                height: 120.0,
+                child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.amber,
+                    ),
+                    margin: const EdgeInsets.all(0.0),
+                    padding: EdgeInsets.fromLTRB(0.0, height, 0.0, 0.0),
+                    child: ColorPicker(color_picked))),
+            // ...List<Widget>.of(BoardRowsWidgets),
+            Expanded(
+                child: ListView(
+                    padding: const EdgeInsets.all(0.0),
+                    shrinkWrap: true,
+                    children:
+                        List<Widget>.of(BoardRowsWidgets).reversed.toList())),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const Settings(),
+                ));
+          },
+          backgroundColor: Colors.black,
+          child: const Icon(Icons.settings),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
