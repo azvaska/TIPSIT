@@ -33,11 +33,8 @@ class Controller {
       comb.add(colors[rngs]);
     }
     comb.shuffle();
-    comb = [Colors.black, Colors.black, Colors.black, Colors.yellow];
+    //comb = [Colors.black, Colors.black, Colors.black, Colors.yellow];
     currenCombination = comb;
-    // for (Color c in currenCombination) {
-    //   print(c.toString());
-    // }
   }
 
   checkColors(List<Color> guess) {

@@ -19,7 +19,8 @@ class _BoardState extends State<Board> {
   int nRows = 1;
   bool done = false;
   bool win = false;
-  static const int nMaxRows = 9;
+  int nMaxRows = 9;
+  bool duplicates = true;
   late List<List<Color>> combinations;
   List<Widget> BoardRowsWidgets = [];
   Color selectedColor = Colors.black;
@@ -126,11 +127,20 @@ class _BoardState extends State<Board> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const Settings(),
-              ));
+          Navigator.of(context)
+              .push(MaterialPageRoute<SettingsData>(
+                builder: (context) => Settings(duplicates, nMaxRows),
+              ))
+              .then((value) => {
+                    if (value != null)
+                      {
+                        setState(() {
+                          duplicates = value.allowDuplicates;
+                          nMaxRows = value.nRows;
+                          restart();
+                        })
+                      }
+                  });
         },
         backgroundColor: Colors.black,
         child: const Icon(Icons.settings),
