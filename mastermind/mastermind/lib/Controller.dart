@@ -45,6 +45,7 @@ class Controller {
   checkColors(List<Color> guess) {
     var hints = <dynamic, dynamic>{};
     List<Color> hintsC = [];
+    //doppi bianchi
     List<Color> localCombination = List.from(currenCombination);
     int nRight = 0;
     for (var i = 0; i < currenCombination.length; i++) {
