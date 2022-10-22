@@ -10,8 +10,9 @@ class Circle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
     return Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: EdgeInsets.all(width * 0.02),
         child: CustomPaint(
           size: Size(this.x, this.y),
           painter: CirclePainter(color),

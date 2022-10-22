@@ -102,13 +102,16 @@ class _BoardState extends State<Board> {
       Future.delayed(
           Duration.zero, () => WinLost(restart, win).showAlertDialog(context));
     }
-    var height = MediaQuery.of(context).viewPadding.top;
+    double height = MediaQuery.of(context).viewPadding.top;
+    double width = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.blueGrey,
       body: Column(
         children: [
           SizedBox(
               height: 120.0,
+              width: width,
               child: Container(
                   decoration: const BoxDecoration(
                     color: Colors.amber,
