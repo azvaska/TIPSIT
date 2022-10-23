@@ -23,28 +23,25 @@ class _ColorPickerState extends State<ColorPicker> {
         alignment: WrapAlignment.center,
         runSpacing: 0.0,
         children: List.generate(
-            Controller.colors.length,
-            (i) => InkWell(
-                  onTap: () => {widget.color_picker(Controller.colors[i])},
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                      child: Container(
-                        width: 50.0,
-                        height: 50.0,
-                        child: Circle(45, 45, Controller.colors[i]),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.1),
-                          borderRadius: BorderRadius.all(Radius.circular(12.0)),
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 1.0,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                )).toList());
+          Controller.colors.length,
+          (i) => InkWell(
+              onTap: () {
+                setState(() {
+                  selected = Controller.colors[i];
+                  widget.color_picker(Controller.colors[i]);
+                });
+              },
+              child: Padding(
+                padding: EdgeInsets.only(right: 0),
+                child: Container(
+                  decoration: selected == Controller.colors[i]
+                      ? BoxDecoration(
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(width: 3, color: Colors.white))
+                      : null,
+                  child: Circle(45, 45, Controller.colors[i]),
+                ),
+              )),
+        ).toList());
   }
 }

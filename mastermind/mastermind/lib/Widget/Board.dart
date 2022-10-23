@@ -15,7 +15,7 @@ class Board extends StatefulWidget {
 }
 
 class _BoardState extends State<Board> {
-  late var controller;
+  late Controller controller;
   int nRows = 1;
   bool done = false;
   bool win = false;
@@ -23,7 +23,7 @@ class _BoardState extends State<Board> {
   bool duplicates = true;
   late List<List<Color>> combinations;
   List<Widget> BoardRowsWidgets = [];
-  Color selectedColor = Colors.black;
+  Color selectedColor = Colors.blue;
   void color_picked(Color C) {
     setState(() {
       selectedColor = C;
@@ -40,6 +40,8 @@ class _BoardState extends State<Board> {
   }
 
   void restart() {
+    controller.genCombination();
+
     setState(() {
       done = false;
       win = false;
@@ -61,7 +63,6 @@ class _BoardState extends State<Board> {
         setState(() {
           done = true;
         });
-        controller.genCombination();
         return [];
       }
       setState(() {
@@ -72,7 +73,6 @@ class _BoardState extends State<Board> {
       return colors;
     } on WinException {
       //WIN
-      controller.genCombination();
       setState(() {
         win = true;
         done = true;
@@ -84,6 +84,7 @@ class _BoardState extends State<Board> {
   @override
   void initState() {
     super.initState();
+
     controller = Controller(duplicates);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -92,7 +93,6 @@ class _BoardState extends State<Board> {
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
     ));
-
     restart();
   }
 
@@ -100,54 +100,81 @@ class _BoardState extends State<Board> {
   Widget build(BuildContext context) {
     if (done) {
       Future.delayed(
-          Duration.zero, () => WinLost(restart, win).showAlertDialog(context));
+          Duration.zero,
+          () => WinLost(restart, win, controller.currenCombination)
+              .showAlertDialog(context));
     }
     double height = MediaQuery.of(context).viewPadding.top;
     double width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.blueGrey,
-      body: Column(
-        children: [
-          SizedBox(
-              height: 120.0,
-              width: width,
-              child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.amber,
+        backgroundColor: Colors.blueGrey,
+        body: Column(
+          children: [
+            SizedBox(
+                height: 120.0,
+                width: width,
+                child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.amber,
+                    ),
+                    margin: const EdgeInsets.all(0.0),
+                    padding: EdgeInsets.fromLTRB(0.0, height, 0.0, 0.0),
+                    child: ColorPicker(color_picked))),
+            // ...List<Widget>.of(BoardRowsWidgets),
+            Expanded(
+                child: SingleChildScrollView(
+                    child: Column(
+                        children: List<Widget>.of(BoardRowsWidgets)
+                            .reversed
+                            .toList()))),
+          ],
+        ),
+        floatingActionButton: Stack(
+          children: <Widget>[
+            Padding(
+                padding: const EdgeInsets.only(left: 25),
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      setState(() {
+                        restart();
+                      });
+                    },
+                    backgroundColor: Colors.black,
+                    child: const Icon(Icons.restart_alt),
                   ),
-                  margin: const EdgeInsets.all(0.0),
-                  padding: EdgeInsets.fromLTRB(0.0, height, 0.0, 0.0),
-                  child: ColorPicker(color_picked))),
-          // ...List<Widget>.of(BoardRowsWidgets),
-          Expanded(
-              child: SingleChildScrollView(
-                  child: Column(
-                      children: List<Widget>.of(BoardRowsWidgets)
-                          .reversed
-                          .toList()))),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context)
-              .push(MaterialPageRoute<SettingsData>(
-                builder: (context) => Settings(duplicates, nMaxRows),
-              ))
-              .then((value) => {
-                    if (value != null)
-                      {
-                        setState(() {
-                          duplicates = value.allowDuplicates;
-                          nMaxRows = value.nRows;
-                          restart();
-                        })
-                      }
-                  });
-        },
-        backgroundColor: Colors.black,
-        child: const Icon(Icons.settings),
-      ),
-    );
+                )),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: FloatingActionButton(
+                onPressed: () {
+                  Navigator.of(context)
+                      .push(MaterialPageRoute<SettingsData>(
+                        builder: (context) => Settings(duplicates, nMaxRows),
+                      ))
+                      .then((value) => {
+                            if (value != null)
+                              {
+                                if (duplicates != value.allowDuplicates ||
+                                    nMaxRows != value.nRows)
+                                  {
+                                    setState(() {
+                                      duplicates = value.allowDuplicates;
+                                      controller = Controller(duplicates);
+                                      nMaxRows = value.nRows;
+                                      restart();
+                                    })
+                                  }
+                              }
+                          });
+                },
+                backgroundColor: Colors.black,
+                child: const Icon(Icons.settings),
+              ),
+            ),
+          ],
+        ));
   }
 }

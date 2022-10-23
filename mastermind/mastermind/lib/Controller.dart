@@ -6,11 +6,10 @@ import 'dart:math';
 class Controller {
   static const int nCombination = 4;
   bool debug = false;
-  bool duplicates;
-  Controller(this.duplicates) {
-    genCombination();
-  }
+  bool duplicates = false;
   List<Color> currenCombination = [];
+
+  Controller(this.duplicates);
   static const List<Color> colors = [
     Colors.blue,
     Colors.red,
@@ -21,25 +20,16 @@ class Controller {
   ];
 
   genCombination() {
-    List<Color> comb = [];
-    List<int> numbers = [];
-
-    var rng = Random();
-    for (var i = 0; i < 4; i++) {
-      int rngs = rng.nextInt(6);
-      if (!duplicates) {
-        numbers.add(rngs);
-        if (numbers.where((e) => e == rngs).length > 1) {
-          i--;
-          numbers.removeLast();
-          continue;
-        }
-      }
-      comb.add(colors[rngs]);
+    if (!duplicates) {
+      List<Color> comb = List.from(colors);
+      comb.shuffle();
+      comb = comb.sublist(0, 4);
+      currenCombination = comb;
+      return;
     }
-    comb.shuffle();
-    //comb = [Colors.black, Colors.black, Colors.black, Colors.yellow];
-    currenCombination = comb;
+    Random rng = Random();
+    currenCombination = List.generate(4, (index) => colors[rng.nextInt(6)]);
+    //currenCombination = [Colors.black, Colors.green, Colors.black, Colors.blue];
   }
 
   checkColors(List<Color> guess) {
@@ -47,29 +37,37 @@ class Controller {
     List<Color> hintsC = [];
     //doppi bianchi
     List<Color> localCombination = List.from(currenCombination);
+    List<Color> localGuess = List.from(guess);
+
     int nRight = 0;
+    // Correct color and position
     for (var i = 0; i < currenCombination.length; i++) {
-      // Correct color and position
       if (guess[i] == currenCombination[i]) {
         nRight++;
-        if (hints[guess[i]] == Colors.green) {
-          hintsC.add(Colors.green);
-        } else {
+        if (hints[guess[i]] == null) {
           hints[guess[i]] = Colors.green;
-        }
-      } // Correct color wrong position
-      else if (localCombination.contains(guess[i])) {
-        if (hints[guess[i]] == Colors.green) {
-          hintsC.add(Colors.white);
         } else {
-          hints[guess[i]] = Colors.white;
+          hintsC.add(Colors.green);
         }
+        localCombination.remove(guess[i]);
+        localGuess.remove(guess[i]);
       }
-      localCombination.remove(guess[i]);
     }
     if (nRight == nCombination) {
       throw WinException('WIN');
     }
+    for (var i = 0; i < localGuess.length; i++) {
+      // Correct color wrong position
+      if (localCombination.contains(localGuess[i])) {
+        if (hints[localGuess[i]] == null) {
+          hints[localGuess[i]] = Colors.white;
+        } else {
+          hintsC.add(Colors.white);
+        }
+      }
+      localCombination.remove(guess[i]);
+    }
+
     List<Color> cols = [];
     hints.values.toList().forEach((item) => cols.add(item));
     cols.addAll(hintsC);

@@ -12,11 +12,20 @@ class Circle extends StatelessWidget {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     return Padding(
-        padding: EdgeInsets.all(width * 0.02),
-        child: CustomPaint(
-          size: Size(this.x, this.y),
-          painter: CirclePainter(color),
-        ));
+      padding: EdgeInsets.all(width * 0.02),
+      child: Container(
+        width: x,
+        height: y,
+        decoration: ShapeDecoration(
+          shape: const CircleBorder(),
+          color: color,
+        ),
+      ),
+    );
+    // child: CustomPaint(
+    //   size: Size(this.x, this.y),
+    //   painter: CirclePainter(color),
+    // ));
   }
 }
 
