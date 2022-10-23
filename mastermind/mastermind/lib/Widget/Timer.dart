@@ -20,42 +20,12 @@ class Dependencies {
   final int timerMillisecondsRefreshRate = 30;
 }
 
-class TimerPage extends StatefulWidget {
-  final VoidCallbackAction start;
-  TimerPage({super.key, required this.start});
-
-  TimerPageState createState() => TimerPageState();
-}
-
-class TimerPageState extends State<TimerPage> {
-  final Dependencies dependencies = Dependencies();
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    dependencies.stopwatch.start();
-  }
-
-  void start() {
-    setState(() {
-      if (dependencies.stopwatch.isRunning) {
-        dependencies.stopwatch.stop();
-      } else {
-        dependencies.stopwatch.start();
-      }
-    });
-  }
-
+class TimerPage extends StatelessWidget {
+  Dependencies dependencies;
+  TimerPage(this.dependencies, {super.key});
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Expanded(
-          child: TimerText(dependencies: dependencies),
-        )
-      ],
-    );
+    return TimerText(dependencies: dependencies);
   }
 }
 
@@ -63,6 +33,7 @@ class TimerText extends StatefulWidget {
   TimerText({super.key, required this.dependencies});
   final Dependencies dependencies;
 
+  @override
   TimerTextState createState() => TimerTextState(dependencies: dependencies);
 }
 
@@ -111,13 +82,13 @@ class TimerTextState extends State<TimerText> {
       children: <Widget>[
         RepaintBoundary(
           child: SizedBox(
-            height: 72.0,
+            height: 65.0,
             child: MinutesAndSeconds(dependencies: dependencies),
           ),
         ),
         RepaintBoundary(
           child: SizedBox(
-            height: 72.0,
+            height: 65.0,
             child: Hundreds(dependencies: dependencies),
           ),
         ),
@@ -130,6 +101,7 @@ class MinutesAndSeconds extends StatefulWidget {
   MinutesAndSeconds({required this.dependencies});
   final Dependencies dependencies;
 
+  @override
   MinutesAndSecondsState createState() =>
       MinutesAndSecondsState(dependencies: dependencies);
 }
@@ -160,7 +132,10 @@ class MinutesAndSecondsState extends State<MinutesAndSeconds> {
   Widget build(BuildContext context) {
     String minutesStr = (minutes % 60).toString().padLeft(2, '0');
     String secondsStr = (seconds % 60).toString().padLeft(2, '0');
-    return Text('$minutesStr:$secondsStr.');
+    return Text(
+        style: TextStyle(color: Color.fromARGB(255, 164, 177, 183)),
+        textScaleFactor: 1.2,
+        '$minutesStr:$secondsStr.');
   }
 }
 
@@ -168,6 +143,7 @@ class Hundreds extends StatefulWidget {
   const Hundreds({required this.dependencies});
   final Dependencies dependencies;
 
+  @override
   HundredsState createState() => HundredsState(dependencies: dependencies);
 }
 
@@ -194,6 +170,9 @@ class HundredsState extends State<Hundreds> {
   @override
   Widget build(BuildContext context) {
     String hundredsStr = (hundreds % 100).toString().padLeft(2, '0');
-    return Text(hundredsStr);
+    return Text(
+        textScaleFactor: 1.2,
+        style: TextStyle(color: Color.fromARGB(255, 164, 177, 183)),
+        hundredsStr);
   }
 }

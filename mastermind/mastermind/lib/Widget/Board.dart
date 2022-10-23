@@ -21,6 +21,7 @@ class _BoardState extends State<Board> {
   int nRows = 1;
   bool done = false;
   bool win = false;
+  late Dependencies timerController;
   int nMaxRows = 9;
   bool duplicates = true;
   late List<List<Color>> combinations;
@@ -43,6 +44,8 @@ class _BoardState extends State<Board> {
 
   void restart() {
     controller.genCombination();
+    timerController.stopwatch.reset();
+    timerController.stopwatch.start();
 
     setState(() {
       done = false;
@@ -64,6 +67,7 @@ class _BoardState extends State<Board> {
         //Lost
         setState(() {
           done = true;
+          timerController.stopwatch.stop();
         });
         return [];
       }
@@ -76,6 +80,8 @@ class _BoardState extends State<Board> {
     } on WinException {
       //WIN
       setState(() {
+        timerController.stopwatch.stop();
+
         win = true;
         done = true;
       });
@@ -86,7 +92,7 @@ class _BoardState extends State<Board> {
   @override
   void initState() {
     super.initState();
-
+    timerController = Dependencies();
     controller = Controller(duplicates);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -108,7 +114,6 @@ class _BoardState extends State<Board> {
     }
     double height = MediaQuery.of(context).viewPadding.top;
     double width = MediaQuery.of(context).size.width;
-
     return Scaffold(
         backgroundColor: Colors.blueGrey,
         body: Column(
@@ -139,6 +144,7 @@ class _BoardState extends State<Board> {
                 child: Align(
                   alignment: Alignment.bottomLeft,
                   child: FloatingActionButton(
+                    heroTag: "btn1",
                     onPressed: () {
                       setState(() {
                         restart();
@@ -153,33 +159,38 @@ class _BoardState extends State<Board> {
               child: Align(
                   alignment: Alignment.bottomCenter,
                   child: Text(
+                      style:
+                          TextStyle(color: Color.fromARGB(255, 164, 177, 183)),
                       textScaleFactor: 1.5,
                       "Tries left ${(nMaxRows - BoardRowsWidgets.length) + 1}")),
             ),
-            TimerPage(),
+            Align(
+                alignment: Alignment.bottomCenter,
+                child: TimerPage(timerController)),
             Align(
               alignment: Alignment.bottomRight,
               child: FloatingActionButton(
+                heroTag: "btn2",
                 onPressed: () {
+                  timerController.stopwatch.stop();
                   Navigator.of(context)
                       .push(MaterialPageRoute<SettingsData>(
-                        builder: (context) => Settings(duplicates, nMaxRows),
-                      ))
-                      .then((value) => {
-                            if (value != null)
-                              {
-                                if (duplicates != value.allowDuplicates ||
-                                    nMaxRows != value.nRows)
-                                  {
-                                    setState(() {
-                                      duplicates = value.allowDuplicates;
-                                      controller = Controller(duplicates);
-                                      nMaxRows = value.nRows;
-                                      restart();
-                                    })
-                                  }
-                              }
-                          });
+                    builder: (context) => Settings(duplicates, nMaxRows),
+                  ))
+                      .then((value) {
+                    timerController.stopwatch.start();
+                    if (value != null) {
+                      if (duplicates != value.allowDuplicates ||
+                          nMaxRows != value.nRows) {
+                        setState(() {
+                          duplicates = value.allowDuplicates;
+                          controller = Controller(duplicates);
+                          nMaxRows = value.nRows;
+                          restart();
+                        });
+                      }
+                    }
+                  });
                 },
                 backgroundColor: Colors.black,
                 child: const Icon(Icons.settings),
