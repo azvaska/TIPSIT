@@ -7,6 +7,8 @@ import 'Colorpicker.dart';
 import 'CombinationRow.dart';
 import 'package:flutter/services.dart';
 
+import 'Timer.dart';
+
 class Board extends StatefulWidget {
   const Board({super.key});
 
@@ -146,6 +148,15 @@ class _BoardState extends State<Board> {
                     child: const Icon(Icons.restart_alt),
                   ),
                 )),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Text(
+                      textScaleFactor: 1.5,
+                      "Tries left ${(nMaxRows - BoardRowsWidgets.length) + 1}")),
+            ),
+            TimerPage(),
             Align(
               alignment: Alignment.bottomRight,
               child: FloatingActionButton(
