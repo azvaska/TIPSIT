@@ -12,7 +12,7 @@ class Circle extends StatelessWidget {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     return Padding(
-      padding: EdgeInsets.all(width * 0.02),
+      padding: EdgeInsets.all(width * 0.019),
       child: Container(
         width: x,
         height: y,

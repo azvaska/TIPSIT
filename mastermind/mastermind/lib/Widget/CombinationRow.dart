@@ -32,20 +32,18 @@ class _CombinationRowState extends State<CombinationRow> {
             child: Circle(55, 55, widget.SelectedColors[i]))).toList();
     valueRow.add(InkWell(
         onTap: () {
-          for (Color c in widget.SelectedColors) {
-            if (c == Colors.grey) {
-              //TODO segnale all'utente
-              return;
-            }
+          if (widget.SelectedColors.contains(Colors.grey)) {
+            return;
           }
+
           setState(() {
             checked = true;
             hints = widget.checkCombination(widget.nThRow);
           });
         },
         child: SizedBox(
-          height: 80,
-          width: 80,
+          height: 85,
+          width: 85,
           child: CheckedStatus(checked, hints),
         )));
     return IgnorePointer(

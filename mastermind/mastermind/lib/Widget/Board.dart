@@ -16,7 +16,7 @@ class Board extends StatefulWidget {
   State<Board> createState() => _BoardState();
 }
 
-class _BoardState extends State<Board> {
+class _BoardState extends State<Board> with WidgetsBindingObserver {
   late Controller controller;
   int nRows = 1;
   bool done = false;
@@ -24,6 +24,7 @@ class _BoardState extends State<Board> {
   late Dependencies timerController;
   int nMaxRows = 9;
   bool duplicates = true;
+  bool timerisRunning = false;
   late List<List<Color>> combinations;
   List<Widget> BoardRowsWidgets = [];
   Color selectedColor = Colors.blue;
@@ -34,7 +35,10 @@ class _BoardState extends State<Board> {
   }
 
   void circle_selected(int i, int y) {
+    timerController.stopwatch.start();
+
     setState(() {
+      timerisRunning = true;
       combinations[i][y] = selectedColor;
       BoardRowsWidgets[i] = CombinationRow(
           combinations[i], i, circle_selected, checkCombination,
@@ -45,7 +49,7 @@ class _BoardState extends State<Board> {
   void restart() {
     controller.genCombination();
     timerController.stopwatch.reset();
-    timerController.stopwatch.start();
+    //timerController.stopwatch.start();
 
     setState(() {
       done = false;
@@ -68,6 +72,7 @@ class _BoardState extends State<Board> {
         setState(() {
           done = true;
           timerController.stopwatch.stop();
+          timerisRunning = false;
         });
         return [];
       }
@@ -81,6 +86,7 @@ class _BoardState extends State<Board> {
       //WIN
       setState(() {
         timerController.stopwatch.stop();
+        timerisRunning = false;
 
         win = true;
         done = true;
@@ -90,7 +96,25 @@ class _BoardState extends State<Board> {
   }
 
   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (AppLifecycleState.paused == state) {
+      timerController.stopwatch.stop();
+    } else if (AppLifecycleState.resumed == state) {
+      if (timerisRunning) timerController.stopwatch.start();
+    }
+    print(state);
+  }
+
+  @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
     timerController = Dependencies();
     controller = Controller(duplicates);
@@ -146,7 +170,11 @@ class _BoardState extends State<Board> {
                   child: FloatingActionButton(
                     heroTag: "btn1",
                     onPressed: () {
+                      timerController.stopwatch.stop();
+
                       setState(() {
+                        timerisRunning = false;
+
                         restart();
                       });
                     },
@@ -159,8 +187,8 @@ class _BoardState extends State<Board> {
               child: Align(
                   alignment: Alignment.bottomCenter,
                   child: Text(
-                      style:
-                          TextStyle(color: Color.fromARGB(255, 164, 177, 183)),
+                      style: const TextStyle(
+                          color: Color.fromARGB(255, 164, 177, 183)),
                       textScaleFactor: 1.5,
                       "Tries left ${(nMaxRows - BoardRowsWidgets.length) + 1}")),
             ),
@@ -173,12 +201,14 @@ class _BoardState extends State<Board> {
                 heroTag: "btn2",
                 onPressed: () {
                   timerController.stopwatch.stop();
+                  timerisRunning = false;
+
                   Navigator.of(context)
                       .push(MaterialPageRoute<SettingsData>(
                     builder: (context) => Settings(duplicates, nMaxRows),
                   ))
                       .then((value) {
-                    timerController.stopwatch.start();
+                    if (timerisRunning) timerController.stopwatch.start();
                     if (value != null) {
                       if (duplicates != value.allowDuplicates ||
                           nMaxRows != value.nRows) {
