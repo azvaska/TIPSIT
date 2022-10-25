@@ -33,6 +33,11 @@ class _CombinationRowState extends State<CombinationRow> {
     valueRow.add(InkWell(
         onTap: () {
           if (widget.SelectedColors.contains(Colors.grey)) {
+            ScaffoldMessenger.of(context).clearSnackBars();
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              backgroundColor: Colors.red,
+              content: Text("You need to fill all circles with color"),
+            ));
             return;
           }
 

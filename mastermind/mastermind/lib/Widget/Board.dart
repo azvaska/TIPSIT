@@ -201,14 +201,11 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
                 heroTag: "btn2",
                 onPressed: () {
                   timerController.stopwatch.stop();
-                  timerisRunning = false;
-
                   Navigator.of(context)
                       .push(MaterialPageRoute<SettingsData>(
                     builder: (context) => Settings(duplicates, nMaxRows),
                   ))
                       .then((value) {
-                    if (timerisRunning) timerController.stopwatch.start();
                     if (value != null) {
                       if (duplicates != value.allowDuplicates ||
                           nMaxRows != value.nRows) {
@@ -218,6 +215,8 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
                           nMaxRows = value.nRows;
                           restart();
                         });
+                      } else {
+                        if (timerisRunning) timerController.stopwatch.start();
                       }
                     }
                   });
