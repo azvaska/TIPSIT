@@ -4,11 +4,11 @@ import 'package:mastermind/Widget/CheckedStatus.dart';
 import 'Circle.dart';
 
 class CombinationRow extends StatefulWidget {
-  List<Color> SelectedColors;
-  int nThRow;
+  final List<Color> selectedColors;
+  final int nThRow;
   final void Function(int i, int y) circleSelected;
   final List<Color> Function(int i) checkCombination;
-  CombinationRow(this.SelectedColors, this.nThRow, this.circleSelected,
+  const CombinationRow(this.selectedColors, this.nThRow, this.circleSelected,
       this.checkCombination,
       {super.key});
 
@@ -29,10 +29,10 @@ class _CombinationRowState extends State<CombinationRow> {
             onTap: () {
               widget.circleSelected(widget.nThRow, i);
             },
-            child: Circle(55, 55, widget.SelectedColors[i]))).toList();
+            child: Circle(55, 55, widget.selectedColors[i]))).toList();
     valueRow.add(InkWell(
         onTap: () {
-          if (widget.SelectedColors.contains(Colors.grey)) {
+          if (widget.selectedColors.contains(Colors.grey)) {
             ScaffoldMessenger.of(context).clearSnackBars();
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               backgroundColor: Colors.red,

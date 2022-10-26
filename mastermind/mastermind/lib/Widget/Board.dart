@@ -1,3 +1,5 @@
+// ignore: file_names
+// ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:mastermind/Controller.dart';
 import 'package:mastermind/Widget/Exceptions.dart';
@@ -26,22 +28,22 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
   bool duplicates = true;
   bool timerisRunning = false;
   late List<List<Color>> combinations;
-  List<Widget> BoardRowsWidgets = [];
+  List<Widget> boardRowsWidgets = [];
   Color selectedColor = Colors.blue;
-  void color_picked(Color C) {
+  void colorPicked(Color C) {
     setState(() {
       selectedColor = C;
     });
   }
 
-  void circle_selected(int i, int y) {
+  void circleSelected(int i, int y) {
     timerController.stopwatch.start();
 
     setState(() {
       timerisRunning = true;
       combinations[i][y] = selectedColor;
-      BoardRowsWidgets[i] = CombinationRow(
-          combinations[i], i, circle_selected, checkCombination,
+      boardRowsWidgets[i] = CombinationRow(
+          combinations[i], i, circleSelected, checkCombination,
           key: UniqueKey());
     });
   }
@@ -49,7 +51,6 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
   void restart() {
     controller.genCombination();
     timerController.stopwatch.reset();
-    //timerController.stopwatch.start();
 
     setState(() {
       done = false;
@@ -57,16 +58,16 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
       combinations = [];
       combinations.addAll(List.generate(nMaxRows,
           (index) => [Colors.grey, Colors.grey, Colors.grey, Colors.grey]));
-      BoardRowsWidgets = [];
-      BoardRowsWidgets.add(CombinationRow(
-          combinations[0], 0, circle_selected, checkCombination,
+      boardRowsWidgets = [];
+      boardRowsWidgets.add(CombinationRow(
+          combinations[0], 0, circleSelected, checkCombination,
           key: UniqueKey()));
     });
   }
 
   List<Color> checkCombination(int i) {
     try {
-      var colors = controller.checkColors(combinations[i]);
+      List<Color> colors = controller.checkColors(combinations[i]);
       if (i + 1 == nMaxRows) {
         //Lost
         setState(() {
@@ -77,8 +78,8 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
         return [];
       }
       setState(() {
-        BoardRowsWidgets.add(CombinationRow(
-            combinations[i + 1], i + 1, circle_selected, checkCombination,
+        boardRowsWidgets.add(CombinationRow(
+            combinations[i + 1], i + 1, circleSelected, checkCombination,
             key: UniqueKey()));
       });
       return colors;
@@ -109,7 +110,6 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
     } else if (AppLifecycleState.resumed == state) {
       if (timerisRunning) timerController.stopwatch.start();
     }
-    print(state);
   }
 
   @override
@@ -151,12 +151,12 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
                     ),
                     margin: const EdgeInsets.all(0.0),
                     padding: EdgeInsets.fromLTRB(0.0, height, 0.0, 0.0),
-                    child: ColorPicker(color_picked))),
-            // ...List<Widget>.of(BoardRowsWidgets),
+                    child: ColorPicker(colorPicked))),
+            // ...List<Widget>.of(boardRowsWidgets),
             Expanded(
                 child: SingleChildScrollView(
                     child: Column(
-                        children: List<Widget>.of(BoardRowsWidgets)
+                        children: List<Widget>.of(boardRowsWidgets)
                             .reversed
                             .toList()))),
           ],
@@ -190,7 +190,7 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
                       style: const TextStyle(
                           color: Color.fromARGB(255, 164, 177, 183)),
                       textScaleFactor: 1.5,
-                      "Tries left ${(nMaxRows - BoardRowsWidgets.length) + 1}")),
+                      "Tries left ${(nMaxRows - boardRowsWidgets.length) + 1}")),
             ),
             Align(
                 alignment: Alignment.bottomCenter,

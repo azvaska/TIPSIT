@@ -1,14 +1,10 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:mastermind/Widget/Circle.dart';
 import '../Controller.dart';
 
 class ColorPicker extends StatefulWidget {
-  final ValueSetter<Color> color_picker;
-  const ColorPicker(this.color_picker, {super.key});
+  final ValueSetter<Color> colorPicker;
+  const ColorPicker(this.colorPicker, {super.key});
 
   @override
   State<ColorPicker> createState() => _ColorPickerState();
@@ -18,7 +14,6 @@ class _ColorPickerState extends State<ColorPicker> {
   Color selected = Controller.colors[0];
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
     return Wrap(
         alignment: WrapAlignment.center,
         runSpacing: 0.0,
@@ -28,11 +23,11 @@ class _ColorPickerState extends State<ColorPicker> {
               onTap: () {
                 setState(() {
                   selected = Controller.colors[i];
-                  widget.color_picker(Controller.colors[i]);
+                  widget.colorPicker(Controller.colors[i]);
                 });
               },
               child: Padding(
-                padding: EdgeInsets.only(right: 0),
+                padding: const EdgeInsets.only(right: 0),
                 child: Container(
                   decoration: selected == Controller.colors[i]
                       ? BoxDecoration(

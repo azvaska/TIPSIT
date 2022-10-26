@@ -3,10 +3,10 @@
 import 'package:flutter/material.dart';
 
 class Circle extends StatelessWidget {
-  Color color;
-  double x;
-  double y;
-  Circle(this.x, this.y, this.color, {super.key});
+  final Color color;
+  final double x;
+  final double y;
+  const Circle(this.x, this.y, this.color, {super.key});
 
   @override
   Widget build(BuildContext context) {

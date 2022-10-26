@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' show Color, Colors;
 
 import 'Widget/Exceptions.dart';
 import 'dart:math';
@@ -29,11 +29,11 @@ class Controller {
     }
     Random rng = Random();
     currenCombination = List.generate(4, (index) => colors[rng.nextInt(6)]);
-    //currenCombination = [Colors.black, Colors.green, Colors.black, Colors.blue];
+    currenCombination = [Colors.black, Colors.green, Colors.black, Colors.blue];
   }
 
   checkColors(List<Color> guess) {
-    var hints = <dynamic, dynamic>{};
+    Map<Color, Color> hints = <Color, Color>{};
     List<Color> hintsC = [];
     //doppi bianchi
     List<Color> localCombination = List.from(currenCombination);
@@ -41,7 +41,7 @@ class Controller {
 
     int nRight = 0;
     // Correct color and position
-    for (var i = 0; i < currenCombination.length; i++) {
+    for (int i = 0; i < currenCombination.length; i++) {
       if (guess[i] == currenCombination[i]) {
         nRight++;
         if (hints[guess[i]] == null) {
@@ -56,7 +56,7 @@ class Controller {
     if (nRight == nCombination) {
       throw WinException('WIN');
     }
-    for (var i = 0; i < localGuess.length; i++) {
+    for (int i = 0; i < localGuess.length; i++) {
       // Correct color wrong position
       if (localCombination.contains(localGuess[i])) {
         if (hints[localGuess[i]] == null) {
@@ -65,18 +65,26 @@ class Controller {
           hintsC.add(Colors.white);
         }
       }
-      localCombination.remove(guess[i]);
+      localCombination.remove(localGuess[i]);
     }
 
     List<Color> cols = [];
     hints.values.toList().forEach((item) => cols.add(item));
     cols.addAll(hintsC);
+    cols.sort(
+      (Color a, Color b) {
+        if (a.value == b.value) {
+          return 0;
+        }
+        if (a.value > b.value) {
+          return 1;
+        }
+        return -1;
+      },
+    );
     int nulls = currenCombination.length - cols.length;
-    for (var i = 0; i < nulls; i++) {
+    for (int i = 0; i < nulls; i++) {
       cols.add(Colors.black);
-    }
-    if (debug) {
-      cols = currenCombination;
     }
     return cols;
   }

@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:mastermind/Widget/Board.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const MasterMind());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MasterMind extends StatelessWidget {
+  const MasterMind({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Mastermind',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:flutter/material.dart';
 
@@ -9,9 +8,9 @@ class SettingsData {
 }
 
 class Settings extends StatefulWidget {
-  bool duplicates;
-  int nMaxRows;
-  Settings(this.duplicates, this.nMaxRows, {Key? key}) : super(key: key);
+  final bool duplicates;
+  final int nMaxRows;
+  const Settings(this.duplicates, this.nMaxRows, {Key? key}) : super(key: key);
 
   @override
   State<Settings> createState() => _SettingsState();
@@ -21,7 +20,6 @@ class _SettingsState extends State<Settings> {
   SettingsData settings = SettingsData();
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     settings.allowDuplicates = widget.duplicates;
     settings.nRows = widget.nMaxRows;
@@ -29,7 +27,7 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
-    var height = MediaQuery.of(context).viewPadding.top;
+    double height = MediaQuery.of(context).viewPadding.top;
     return Scaffold(
         backgroundColor: Colors.blueGrey,
         body: WillPopScope(
@@ -57,7 +55,7 @@ class _SettingsState extends State<Settings> {
                           title: const Text('Allow duplicates'),
                           description: const Text(
                               'Allow the presence of duplicated colors in the combination'),
-                          leading: const Icon(Icons.hail),
+                          leading: const Icon(Icons.filter_none),
                           onToggle: (bool value) {
                             setState(() {
                               settings.allowDuplicates = value;
@@ -88,23 +86,17 @@ class _SettingsState extends State<Settings> {
                         SettingsTile(
                           title: const Text('How to play'),
                           value: const Text("""
-The game is played using:
+The game consits in guessing the pattern, in both order and color, within a selectable number of guesses (With the settings option). 
+Each guess is made by selecting 4 colors (clicking the color and tapping on the empty cirle that is colored grey) and then cliking the checkmark to confirm the guess.
+Then it will show at the right of the sequence of colors a feedback with four Colored cirles.
 
-    a decoding board, with a shield at one end covering a row of four large holes, and twelve (or ten, or eight, or six) additional rows containing four large holes next to a set of four small holes;
-    code pegs of six different colors (or more; see Variations below), with round heads, which will be placed in the large holes on the board; and
-    key pegs, some colored black, some white, which are flat-headed and smaller than the code pegs; they will be placed in the small holes on the board.
-
-The two players decide in advance how many games they will play, which must be an even number. One player becomes the codemaker, the other the codebreaker.[3]: 120  The codemaker chooses a pattern of four code pegs. Players decide in advance whether duplicates and blanks are allowed. If so, the codemaker may even choose four same-colored code pegs or four blanks. If blanks are not allowed in the code, the codebreaker may not use blanks in their guesses. The codemaker places the chosen pattern in the four holes covered by the shield, visible to the codemaker but not to the codebreaker.[4]
-
-The codebreaker tries to guess the pattern, in both order and color, within eight to twelve turns. Each guess is made by placing a row of code pegs on the decoding board.[3]: 120  Once placed, the codemaker provides feedback by placing from zero to four key pegs in the small holes of the row with the guess. A colored or black key peg is placed for each code peg from the guess which is correct in both color and position. A white key peg indicates the existence of a correct color code peg placed in the wrong position.[5]
-Screenshot of software implementation (ColorCode) illustrating the example.
-
-If there are duplicate colors in the guess, they cannot all be awarded a key peg unless they correspond to the same number of duplicate colors in the hidden code. For example, if the hidden code is red-red-blue-blue and the player guesses red-red-red-blue, the codemaker will award two colored key pegs for the two correct reds, nothing for the third red as there is not a third red in the code, and a colored key peg for the blue. No indication is given of the fact that the code also includes a second blue.[6]
-
-Once feedback is provided, another guess is made; guesses and feedback continue to alternate until either the codebreaker guesses correctly, or all rows on the decoding board are full.
-
-Traditionally, players can only earn points when playing as the codemaker. The codemaker gets one point for each guess the codebreaker makes. An extra point is earned by the codemaker if the codebreaker is unable to guess the exact pattern within the given number of turns. (An alternative is to score based on the number of key pegs placed.) The winner is the one who has the most points after the agreed-upon number of games are played. 
-
+A black circle indicates that there is not that color for every circle in the guessed code that is correct in both color and location. 
+A white circle indicates the existence of a correct color circle placed in the wrong position.
+A green circle indicates the existence of a correct color in the right position
+If there are duplicate colors in the guess, a Circle will be awarded for the same number of duplicate colors in the hidden code. 
+For example, if the hidden code is red-red-blue-blue and the player guesses red-red-red-blue, they will be awarded two Green pegs for the two correct reds, nothing for the third red as there is not a third red in the code, and a white circle for the blue.
+ No indication is given of the fact that the code also includes a second blue.
+The game is over if the number of tryes is 0 or if the player guesses the right combination
 """),
                           leading: const Icon(Icons.help),
                         ),

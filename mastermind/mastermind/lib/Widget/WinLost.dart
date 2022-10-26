@@ -11,7 +11,7 @@ class WinLost {
     // set up the buttons
     double height = MediaQuery.of(context).size.height * 0.07;
     Widget resetButton = TextButton(
-      child: Text(textScaleFactor: 1.4, "Restart"),
+      child: const Text(textScaleFactor: 1.4, "Restart"),
       onPressed: () {
         restart();
         Navigator.of(context).pop();

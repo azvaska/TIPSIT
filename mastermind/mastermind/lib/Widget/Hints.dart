@@ -1,12 +1,10 @@
+// ignore: file_names
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
-
 import 'Circle.dart';
 
 class Hints extends StatelessWidget {
-  List<Color> hints;
-  Hints(this.hints, {super.key});
+  final List<Color> hints;
+  const Hints(this.hints, {super.key});
 
   @override
   Widget build(BuildContext context) {
