@@ -1,8 +1,8 @@
 // ignore: file_names
-// ignore: file_names
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:mastermind/Widget/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 
@@ -37,21 +37,20 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
   List<Widget> boardRowsWidgets = [];
   Color selectedColor = Colors.blue;
 
-  void colorPicked(Color C) {
-    setState(() {
-      selectedColor = C;
-    });
-  }
-
-  void circleSelected(int i, int y) {
-    timerController.stopwatch.start();
-    setState(() {
-      timerisRunning = true;
-      combinations[i][y] = selectedColor;
-      boardRowsWidgets[i] = CombinationRow(
-          combinations[i], i, circleSelected, checkCombination,
-          key: UniqueKey());
-    });
+  @override
+  void initState() {
+    WidgetsBinding.instance.addObserver(this);
+    super.initState();
+    timerController = Dependencies();
+    controller = Controller(duplicates);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+    ));
+    restart();
   }
 
   void restart() {
@@ -68,6 +67,39 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
       boardRowsWidgets.add(CombinationRow(
           combinations[0], 0, circleSelected, checkCombination,
           key: UniqueKey()));
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (AppLifecycleState.paused == state) {
+      timerController.stopwatch.stop();
+    } else if (AppLifecycleState.resumed == state) {
+      if (timerisRunning) timerController.stopwatch.start();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void colorPicked(Color C) {
+    setState(() {
+      selectedColor = C;
+    });
+  }
+
+  void circleSelected(int i, int y) {
+    timerController.stopwatch.start();
+    setState(() {
+      timerisRunning = true;
+      combinations[i][y] = selectedColor;
+      boardRowsWidgets[i] = CombinationRow(
+          combinations[i], i, circleSelected, checkCombination,
+          key: UniqueKey());
     });
   }
 
@@ -110,43 +142,16 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
   }
 
   @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    if (AppLifecycleState.paused == state) {
-      timerController.stopwatch.stop();
-    } else if (AppLifecycleState.resumed == state) {
-      if (timerisRunning) timerController.stopwatch.start();
-    }
-  }
-
-  @override
-  void initState() {
-    WidgetsBinding.instance.addObserver(this);
-    super.initState();
-    timerController = Dependencies();
-    controller = Controller(duplicates);
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-    ));
-    restart();
-  }
-
-  @override
   Widget build(BuildContext context) {
     if (done) {
       Future.delayed(
           Duration.zero,
-          () => WinLost(restart, win, controller.currenCombination)
+          () => WinLost(
+                  restart,
+                  win,
+                  controller.currenCombination,
+                  timerController.stopwatch.elapsedMilliseconds,
+                  prefs.getInt(Utils.bestTimeKey))
               .showAlertDialog(context));
     }
     double height = MediaQuery.of(context).viewPadding.top;
@@ -165,7 +170,6 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
                     margin: const EdgeInsets.all(0.0),
                     padding: EdgeInsets.fromLTRB(0.0, height, 0.0, 0.0),
                     child: ColorPicker(colorPicked))),
-            // ...List<Widget>.of(boardRowsWidgets),
             Expanded(
                 child: SingleChildScrollView(
                     child: Column(

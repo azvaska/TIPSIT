@@ -48,7 +48,6 @@ class TimerTextState extends State<TimerText> {
         Duration(
             milliseconds: widget.dependencies.timerMillisecondsRefreshRate),
         callback);
-
     super.initState();
   }
 

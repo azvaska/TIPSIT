@@ -1,8 +1,21 @@
-# mastermind
+# Mastermind
 
-A new Flutter project.
+A guessing game.
+<br>
+lean what it is about
+[here](https://en.wikipedia.org/wiki/Mastermind_(board_game))
+## Additional Features
+- Variable number of rows for the guess
+- Possibility to disable duplicated colors in the combination
+- Stopwatch for the match and the best time through all the games
 
-## Getting Started
+## In depth
+The stopwatch has been implemented trought the ```Stopwatch``` class and ``` Timer.periodic()``` is used for updating the Ui.
+<br>
+For performance reasons the minutes and seconds widgets are separated from the microseconds and also the repain are isolated tanks to the widget 
+```RepaintBoundary```.
+
+
 
 This project is a starting point for a Flutter application.
 
