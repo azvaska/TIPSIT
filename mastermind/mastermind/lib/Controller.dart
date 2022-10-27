@@ -12,7 +12,7 @@ class Controller {
   static const List<Color> colors = [
     Colors.blue,
     Colors.red,
-    Colors.yellow,
+    Colors.purple,
     Colors.white,
     Colors.green,
     Colors.black

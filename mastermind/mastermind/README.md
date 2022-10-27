@@ -14,6 +14,8 @@ The stopwatch has been implemented trought the ```Stopwatch``` class and ``` Tim
 <br>
 For performance reasons the minutes and seconds widgets are separated from the microseconds and also the repain are isolated tanks to the widget 
 ```RepaintBoundary```.
+<br>
+This is not the most efficent setup since i don't stop the ``` Timer.periodic()``` so it will call eaven when the timer is supposely stoped, to mitigate i check if the value of the stopwatch is changes if not i just exit the funciton.
 
 
 
