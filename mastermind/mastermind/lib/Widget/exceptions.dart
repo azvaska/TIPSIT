@@ -1,4 +1,4 @@
 class WinException implements Exception {
-  String cause;
+  final String cause;
   WinException(this.cause);
 }

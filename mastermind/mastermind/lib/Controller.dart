@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart' show Color, Colors;
 
-import 'Widget/Exceptions.dart';
+import 'Widget/exceptions.dart';
 import 'dart:math';
 
 class Controller {
   static const int nCombination = 4;
-  bool debug = false;
-  bool duplicates = false;
+  final bool duplicates;
   List<Color> currenCombination = [];
 
   Controller(this.duplicates);

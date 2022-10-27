@@ -1,13 +1,18 @@
 // ignore: file_names
 // ignore: file_names
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
+
 import 'package:mastermind/Controller.dart';
-import 'package:mastermind/Widget/Exceptions.dart';
+import 'package:mastermind/Widget/exceptions.dart';
 import 'package:mastermind/Widget/Settings.dart';
 import 'package:mastermind/Widget/WinLost.dart';
+
 import 'Colorpicker.dart';
 import 'CombinationRow.dart';
-import 'package:flutter/services.dart';
 
 import 'Timer.dart';
 
@@ -23,6 +28,7 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
   int nRows = 1;
   bool done = false;
   bool win = false;
+  late SharedPreferences prefs;
   late Dependencies timerController;
   int nMaxRows = 9;
   bool duplicates = true;
@@ -30,6 +36,7 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
   late List<List<Color>> combinations;
   List<Widget> boardRowsWidgets = [];
   Color selectedColor = Colors.blue;
+
   void colorPicked(Color C) {
     setState(() {
       selectedColor = C;
@@ -38,7 +45,6 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
 
   void circleSelected(int i, int y) {
     timerController.stopwatch.start();
-
     setState(() {
       timerisRunning = true;
       combinations[i][y] = selectedColor;
@@ -85,6 +91,13 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
       return colors;
     } on WinException {
       //WIN
+      Future.delayed(Duration.zero, () async {
+        prefs = await SharedPreferences.getInstance();
+        await prefs.setInt(
+            'besttime',
+            min(prefs.getInt('besttime') ?? 0x7fffffffffffffff,
+                timerController.stopwatch.elapsedMilliseconds));
+      });
       setState(() {
         timerController.stopwatch.stop();
         timerisRunning = false;

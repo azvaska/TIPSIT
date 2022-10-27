@@ -1,10 +1,15 @@
 import 'package:settings_ui/settings_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsData {
   bool allowDuplicates = true;
   int nRows;
-  SettingsData([this.nRows = 6, this.allowDuplicates = true]);
+  int bestTime;
+  SettingsData(
+      [this.nRows = 6,
+      this.allowDuplicates = true,
+      this.bestTime = 0x7fffffffffffffff]);
 }
 
 class Settings extends StatefulWidget {
@@ -18,16 +23,26 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   SettingsData settings = SettingsData();
+  var prefs;
   @override
   void initState() {
     super.initState();
     settings.allowDuplicates = widget.duplicates;
     settings.nRows = widget.nMaxRows;
+    setBestTime();
+  }
+
+  setBestTime() async {
+    var prefs = await SharedPreferences.getInstance();
+    settings.bestTime = prefs.getInt('besttime') ?? 0x7fffffffffffffff;
+    print(settings.bestTime);
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).viewPadding.top;
+    print(settings.bestTime);
     return Scaffold(
         backgroundColor: Colors.blueGrey,
         body: WillPopScope(
@@ -77,6 +92,13 @@ class _SettingsState extends State<Settings> {
                           ),
                           leading: const Icon(Icons.list),
                           trailing: Text(settings.nRows.toString()),
+                        ),
+                        SettingsTile(
+                          title: const Text('Best Time'),
+                          value: settings.bestTime == 0x7fffffffffffffff
+                              ? const Text("Not yet set")
+                              : Text(Duration(microseconds: settings.bestTime)
+                                  .toString()),
                         ),
                       ],
                     ),

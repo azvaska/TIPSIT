@@ -4,8 +4,8 @@ import 'Circle.dart';
 
 class WinLost {
   final Function restart;
-  bool win;
-  List<Color> currenCombination;
+  final bool win;
+  final List<Color> currenCombination;
   WinLost(this.restart, this.win, this.currenCombination);
   showAlertDialog(BuildContext context) {
     // set up the buttons
@@ -31,7 +31,9 @@ class WinLost {
     }
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
-      backgroundColor: Colors.grey,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(30.0))),
+      backgroundColor: const Color.fromARGB(255, 236, 224, 224),
       title: Text(
           textAlign: TextAlign.center,
           textScaleFactor: 1.4,
