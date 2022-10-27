@@ -1,10 +1,8 @@
 // ignore: file_names
-import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:mastermind/Widget/utils.dart';
-import 'package:pausable_timer/pausable_timer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 
@@ -30,7 +28,6 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
   int nRows = 1;
   bool done = false;
   bool win = false;
-  late PausableTimer timer;
   late SharedPreferences prefs;
   late Dependencies timerController;
   int nMaxRows = 9;
@@ -39,17 +36,12 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
   late List<List<Color>> combinations;
   List<Widget> boardRowsWidgets = [];
   Color selectedColor = Colors.blue;
-  int milliseconds = 0;
 
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
     timerController = Dependencies();
-    timer = PausableTimer(
-        Duration(milliseconds: timerController.timerMillisecondsRefreshRate),
-        callback);
-    timer.start();
     controller = Controller(duplicates);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -64,7 +56,7 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
   void restart() {
     controller.genCombination();
     timerController.stopwatch.reset();
-    timer.reset();
+
     setState(() {
       done = false;
       win = false;
@@ -83,37 +75,15 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     if (AppLifecycleState.paused == state) {
       timerController.stopwatch.stop();
-      timer.pause();
     } else if (AppLifecycleState.resumed == state) {
-      if (timerisRunning) {
-        timerController.stopwatch.start();
-        timer.start();
-      }
+      if (timerisRunning) timerController.stopwatch.start();
     }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    timer.cancel();
     super.dispose();
-  }
-
-  void callback() {
-    if (milliseconds != timerController.stopwatch.elapsedMilliseconds) {
-      milliseconds = timerController.stopwatch.elapsedMilliseconds;
-      final int hundreds = (milliseconds / 10).truncate();
-      final int seconds = (hundreds / 100).truncate();
-      final int minutes = (seconds / 60).truncate();
-      final ElapsedTime elapsedTime = ElapsedTime(
-        hundreds: hundreds,
-        seconds: seconds,
-        minutes: minutes,
-      );
-      for (final listener in timerController.timerListeners) {
-        listener(elapsedTime);
-      }
-    }
   }
 
   void colorPicked(Color C) {
@@ -123,8 +93,6 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
   }
 
   void circleSelected(int i, int y) {
-    timer.start();
-
     timerController.stopwatch.start();
     setState(() {
       timerisRunning = true;
@@ -143,7 +111,6 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
         setState(() {
           done = true;
           timerController.stopwatch.stop();
-          timer.cancel();
           timerisRunning = false;
         });
         return [];

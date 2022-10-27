@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 class ElapsedTime {
   final int hundreds;
@@ -24,19 +25,70 @@ class TimerPage extends StatelessWidget {
   const TimerPage(this.dependencies, {super.key});
   @override
   Widget build(BuildContext context) {
+    return TimerText(dependencies: dependencies);
+  }
+}
+
+class TimerText extends StatefulWidget {
+  const TimerText({super.key, required this.dependencies});
+  final Dependencies dependencies;
+
+  @override
+  TimerTextState createState() => TimerTextState();
+}
+
+class TimerTextState extends State<TimerText> {
+  TimerTextState();
+  late Timer timer;
+  int milliseconds = 0;
+
+  @override
+  void initState() {
+    timer = Timer.periodic(
+        Duration(
+            milliseconds: widget.dependencies.timerMillisecondsRefreshRate),
+        callback);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
+  }
+
+  void callback(Timer timer) {
+    if (milliseconds != widget.dependencies.stopwatch.elapsedMilliseconds) {
+      milliseconds = widget.dependencies.stopwatch.elapsedMilliseconds;
+      final int hundreds = (milliseconds / 10).truncate();
+      final int seconds = (hundreds / 100).truncate();
+      final int minutes = (seconds / 60).truncate();
+      final ElapsedTime elapsedTime = ElapsedTime(
+        hundreds: hundreds,
+        seconds: seconds,
+        minutes: minutes,
+      );
+      for (final listener in widget.dependencies.timerListeners) {
+        listener(elapsedTime);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         RepaintBoundary(
           child: SizedBox(
             height: 65.0,
-            child: MinutesAndSeconds(dependencies: dependencies),
+            child: MinutesAndSeconds(dependencies: widget.dependencies),
           ),
         ),
         RepaintBoundary(
           child: SizedBox(
             height: 65.0,
-            child: Hundreds(dependencies: dependencies),
+            child: Hundreds(dependencies: widget.dependencies),
           ),
         ),
       ],
