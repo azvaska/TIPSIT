@@ -28,11 +28,10 @@ class Controller {
     }
     Random rng = Random();
     currenCombination = List.generate(4, (index) => colors[rng.nextInt(6)]);
-    currenCombination = [Colors.black, Colors.green, Colors.black, Colors.blue];
+    //currenCombination = [Colors.black, Colors.green, Colors.black, Colors.blue];
   }
 
   checkColors(List<Color> guess) {
-    Map<Color, Color> hints = <Color, Color>{};
     List<Color> hintsC = [];
     //doppi bianchi
     List<Color> localCombination = List.from(currenCombination);
@@ -43,11 +42,7 @@ class Controller {
     for (int i = 0; i < currenCombination.length; i++) {
       if (guess[i] == currenCombination[i]) {
         nRight++;
-        if (hints[guess[i]] == null) {
-          hints[guess[i]] = Colors.green;
-        } else {
-          hintsC.add(Colors.green);
-        }
+        hintsC.add(Colors.green);
         localCombination.remove(guess[i]);
         localGuess.remove(guess[i]);
       }
@@ -58,33 +53,16 @@ class Controller {
     for (int i = 0; i < localGuess.length; i++) {
       // Correct color wrong position
       if (localCombination.contains(localGuess[i])) {
-        if (hints[localGuess[i]] == null) {
-          hints[localGuess[i]] = Colors.white;
-        } else {
-          hintsC.add(Colors.white);
-        }
+        hintsC.add(Colors.white);
       }
       localCombination.remove(localGuess[i]);
     }
 
-    List<Color> cols = [];
-    hints.values.toList().forEach((item) => cols.add(item));
-    cols.addAll(hintsC);
-    cols.sort(
-      (Color a, Color b) {
-        if (a.value == b.value) {
-          return 0;
-        }
-        if (a.value > b.value) {
-          return 1;
-        }
-        return -1;
-      },
-    );
-    int nulls = currenCombination.length - cols.length;
+    int nulls = currenCombination.length - hintsC.length;
     for (int i = 0; i < nulls; i++) {
-      cols.add(Colors.black);
+      hintsC.add(Colors.black);
     }
-    return cols;
+    hintsC = currenCombination;
+    return hintsC;
   }
 }
