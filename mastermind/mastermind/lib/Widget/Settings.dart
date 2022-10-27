@@ -127,19 +127,19 @@ class _SettingsState extends State<Settings> {
                         SettingsTile(
                           title: const Text('How to play'),
                           value: const Text(textScaleFactor: 1.3, """
-The game consits in guessing the pattern, in both order and color, within a selectable number of guesses (chanWith the settings option). 
-Each guess is made by selecting 4 colors (clicking the color and tapping on the empty cirle that is colored grey) and then cliking the checkmark to confirm the guess.
-Then it will show on the right of the sequence of colors a feedback with four Colored cirles.
-
-A black circle indicates that there is not that color for every circle in the guessed code that is correct in both color and location. 
+The game consists in guessing the pattern, in both order and color, within a selectable number of guesses (changeable with the settings option).
+Each guess is made by selecting 4 colors (clicking the color at the top and tapping on the empty circle that is colored gray) and then clicking the checkmark to confirm the guess.
+Then it will show on the right of the sequence of colors a feedback with four Colored circles.
+ 
+A black circle indicates that there is not that color for every circle in the guessed code that is correct in both color and location.
 A white circle indicates the existence of a correct color circle placed in the wrong position.
-A green circle indicates the existence of a correct color in the right position.
-
-If there are duplicate colors in the guess, a Circle will be awarded for the same number of duplicate colors in the hidden code.
-
+A green circle indicates the existence of a correct color in the proper position.
+ 
+If there are duplicated colors in the guess, a Circle will be awarded for the same number of duplicate colors in the hidden code if the guess contained.
+ 
 For example, if the hidden code is red-red-blue-blue and the player guesses red-red-red-blue, they will be awarded two Green pegs for the two correct reds, nothing for the third red as there is not a third red in the code, and a white circle for the blue.
- No indication is given of the fact that the code also includes a second blue.
-The game is over if the number of tryes is 0 or if the player guesses the right combination
+No indication is given that the code also includes a second blue.
+The game is over if the number of tries is 0 or if the player guesses the right combination
 """),
                           leading: const Icon(Icons.help),
                         ),
