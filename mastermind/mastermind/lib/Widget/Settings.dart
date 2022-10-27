@@ -36,7 +36,13 @@ class _SettingsState extends State<Settings> {
 
   getBestTime() async {
     prefs = await SharedPreferences.getInstance();
-    settings.bestTime = prefs.getInt('besttime') ?? 0x7fffffffffffffff;
+    settings.bestTime = prefs.getInt('besttime') ?? -1;
+    if (settings.bestTime == -1) {
+      setState(() {
+        currentTimeText = "Not yet set";
+      });
+      return;
+    }
     setState(() {
       currentTimeText = Utils.formatTime(settings.bestTime);
     });
@@ -104,8 +110,7 @@ class _SettingsState extends State<Settings> {
                           trailing: TextButton(
                               onPressed: () => {
                                     Future.delayed(Duration.zero, () async {
-                                      prefs.setInt(
-                                          Utils.bestTimeKey, Utils.maxInt);
+                                      await prefs.remove(Utils.bestTimeKey);
                                       setState(() {
                                         settings.bestTime = Utils.maxInt;
                                         currentTimeText = "Not yet set";

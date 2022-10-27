@@ -62,7 +62,6 @@ class Controller {
     for (int i = 0; i < nulls; i++) {
       hintsC.add(Colors.black);
     }
-    hintsC = currenCombination;
     return hintsC;
   }
 }
