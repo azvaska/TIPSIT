@@ -2,7 +2,7 @@
 
 A guessing game.
 <br>
-lean what it is about
+Lean what it is about
 [here](https://en.wikipedia.org/wiki/Mastermind_(board_game))
 ## Additional Features
 - Variable number of rows for the guess
@@ -10,60 +10,60 @@ lean what it is about
 - Stopwatch for the match and the best time through all the games
 
 ## In depth
-### Stopwach
-The stopwatch has been implemented trought the ```Stopwatch``` class and ``` Timer.periodic()``` is used for telling the ui that it should probably update.
+### Stopwatch
+The stopwatch has been implemented thought the ```Stopwatch``` class and ``` Timer.periodic()``` is used for telling the UI that it should probably update.
 <br>
-For performance reasons the minutes and seconds widgets are separated from the microseconds and also the repain are isolated tanks to the widget 
+For performance reasons the minutes and seconds widgets are separated from the microseconds and also the repaint are isolated thanks to the widget 
 ```RepaintBoundary```.
 <br>
-This is not the most efficent setup since i don't stop the ``` Timer.periodic()``` if for example the user opens the settings or exits the app so it will call eaven when the timer is supposely stoped, to mitigate i check if the value of the stopwatch is changes if not i just exit the funciton.
-The function otherwise i create an object with all the time information that all the subscribed listeners will recive and they will probably reload the ui if the value is different.
+This is not the most efficient setup since I don't stop the ``` Timer.periodic()``` if for example the user opens the settings or exits the app, so it will call even when the timer is supposedly stopped, to mitigate I check if the value of the stopwatch is changed if the function just exits.
+The function otherwise I create an object with all the time information that all the subscribed listeners will receive, and they will reload the UI if the value is different.
 ```dart
-  void callback(Timer timer) {
-    if (milliseconds != widget.dependencies.stopwatch.elapsedMilliseconds) {
-      milliseconds = widget.dependencies.stopwatch.elapsedMilliseconds;
-      final int hundreds = (milliseconds / 10).truncate();
-      final int seconds = (hundreds / 100).truncate();
-      final int minutes = (seconds / 60).truncate();
-      final ElapsedTime elapsedTime = ElapsedTime(
-        hundreds: hundreds,
-        seconds: seconds,
-        minutes: minutes,
-      );
-      for (final listener in widget.dependencies.timerListeners) {
-        listener(elapsedTime);
-      }
+void callback(Timer timer) {
+  if (milliseconds != widget.dependencies.stopwatch.elapsedMilliseconds) {
+    milliseconds = widget.dependencies.stopwatch.elapsedMilliseconds;
+    final int hundreds = (milliseconds / 10).truncate();
+    final int seconds = (hundreds / 100).truncate();
+    final int minutes = (seconds / 60).truncate();
+    final ElapsedTime elapsedTime = ElapsedTime(
+      hundreds: hundreds,
+      seconds: seconds,
+      minutes: minutes,
+    );
+    for (final listener in widget.dependencies.timerListeners) {
+      listener(elapsedTime);
     }
   }
-```
-The widgets that will show the value they subscribe to the callback linke this:
-```dart
-  @override
-  void initState() {
-    widget.dependencies.timerListeners.add(onTick);
-    super.initState();
   }
 ```
-The function onTick for example in the widges that manages the minutes and seconds like this:
+The widgets that will show the value they subscribe to the ``` Timer.periodic()``` is like this:
 ```dart
-  void onTick(ElapsedTime elapsed) {
-    if (elapsed.minutes != minutes || elapsed.seconds != seconds) {
-      setState(() {
-        minutes = elapsed.minutes;
-        seconds = elapsed.seconds;
-      });
-    }
+@override
+void initState() {
+  widget.dependencies.timerListeners.add(onTick);
+  super.initState();
+}
+```
+The function onTick for example in the widgets that manages the minutes and seconds is like this:
+```dart
+void onTick(ElapsedTime elapsed) {
+  if (elapsed.minutes != minutes || elapsed.seconds != seconds) {
+    setState(() {
+      minutes = elapsed.minutes;
+      seconds = elapsed.seconds;
+    });
   }
+}
 ```
 
 ### BestTime
-Tanks to the class ```SharedPreferences``` we can save the best time easly and retrive it back.
+Thanks to the class ```SharedPreferences``` we can save the best time easily and retrieve it back.
 ```dart
-      int bestTime = min(prefs.getInt(Utils.bestTimeKey) ?? Utils.maxInt,
-          timerController.stopwatch.elapsedMilliseconds);
-      Future.delayed(Duration.zero, () async {
-        await prefs.setInt(Utils.bestTimeKey, bestTime);
-      });
+int bestTime = min(prefs.getIn(Utils.bestTimeKey) ?? Utils.maxInt,
+    timerController.stopwatch.elapsedMilliseconds);
+Future.delayed(Duration.zero, () async {
+  await prefs.setInt(Utils.bestTimeKey, bestTime);
+});
 ```
 With Utils as:
 ```dart
@@ -82,7 +82,7 @@ class Utils {
   }
 }
 ```
-```0x7fffffffffffffff``` is the biggest integer that dart can handle we use that value when the besttime on the disk is null.
+```0x7fffffffffffffff``` is the biggest integer that dart can handle we use that value when the ```bestTime``` on the disk is null.
 
 ### Settings
 For the settings a new screen is created:
@@ -109,7 +109,7 @@ Navigator.of(context)
 });
 ```
 The data between the screen is shared using a ```SettingsData``` class
-To get the new data from the settings screen, when the user is done (he clicked the arrow  or used the android back) tanks to the ```WillPopScope``` class it will call this function:
+To get the new data from the settings screen, when the user is done (he clicked the arrow or used the android back) thanks to the ```WillPopScope``` class it will call this function:
 ```dart
 onWillPop: () async {
   Navigator.pop(context, widget.settings);
@@ -117,10 +117,29 @@ onWillPop: () async {
 },
 ```
 That will return the ```SettingsData``` object back to the Board
-That in the case that it changed it will reset the game and reload the ui.
+That in the case that it changed it will reset the game and reload the UI.
+### App in background
+To stop the timer when the user puts the app in the background i subscribed to WidgetsBindingObserver
+in the initState:
+```dart
+    WidgetsBinding.instance.addObserver(this);
+```
+
+Then every time a new change in the app appends this function is called:
+```dart
+@override
+void didChangeAppLifecycleState(AppLifecycleState state) {
+  super.didChangeAppLifecycleState(state);
+  if (AppLifecycleState.paused == state) {
+    timerController.stopwatch.stop();
+  } else if (AppLifecycleState.resumed == state) {
+    if (timerisRunning) timerController.stopwatch.start();
+  }
+}
+```
 
 
-## Riferimenti
+## References
 [WillPopScope](https://api.flutter.dev/flutter/widgets/WillPopScope-class.html)
 
 [MaterialPageRoute](https://api.flutter.dev/flutter/material/MaterialPageRoute-class.html)
@@ -132,3 +151,5 @@ That in the case that it changed it will reset the game and reload the ui.
 [Stopwatch](https://api.flutter.dev/flutter/dart-core/Stopwatch-class.html)
 
 [Timer](https://api.flutter.dev/flutter/dart-async/Timer-class.html)
+
+[WidgetsBindingObserver](https://api.flutter.dev/flutter/widgets/WidgetsBindingObserver-class.html)
