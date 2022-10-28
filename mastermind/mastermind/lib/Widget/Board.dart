@@ -50,7 +50,12 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
     ));
+    initPrefs();
     restart();
+  }
+
+  void initPrefs() async {
+    prefs = await SharedPreferences.getInstance();
   }
 
   void restart() {
@@ -108,6 +113,13 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
       List<Color> colors = controller.checkColors(combinations[i]);
       if (i + 1 == nMaxRows) {
         //Lost
+        WinLost(
+                restart,
+                false,
+                controller.currenCombination,
+                timerController.stopwatch.elapsedMilliseconds,
+                prefs.getInt(Utils.bestTimeKey))
+            .showAlertDialog(context);
         setState(() {
           done = true;
           timerController.stopwatch.stop();
@@ -123,19 +135,17 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
       return colors;
     } on WinException {
       //WIN
+      int bestTime = min(prefs.getInt('besttime') ?? 0x7fffffffffffffff,
+          timerController.stopwatch.elapsedMilliseconds);
       Future.delayed(Duration.zero, () async {
-        prefs = await SharedPreferences.getInstance();
-        await prefs.setInt(
-            'besttime',
-            min(prefs.getInt('besttime') ?? 0x7fffffffffffffff,
-                timerController.stopwatch.elapsedMilliseconds));
+        await prefs.setInt('besttime', bestTime);
       });
+      WinLost(restart, true, controller.currenCombination,
+              timerController.stopwatch.elapsedMilliseconds, bestTime)
+          .showAlertDialog(context);
       setState(() {
         timerController.stopwatch.stop();
         timerisRunning = false;
-
-        win = true;
-        done = true;
       });
       return [];
     }
@@ -143,17 +153,6 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    if (done) {
-      Future.delayed(
-          Duration.zero,
-          () => WinLost(
-                  restart,
-                  win,
-                  controller.currenCombination,
-                  timerController.stopwatch.elapsedMilliseconds,
-                  prefs.getInt(Utils.bestTimeKey))
-              .showAlertDialog(context));
-    }
     double height = MediaQuery.of(context).viewPadding.top;
     double width = MediaQuery.of(context).size.width;
     return Scaffold(
