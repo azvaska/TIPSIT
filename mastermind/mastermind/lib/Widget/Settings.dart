@@ -1,3 +1,4 @@
+// ignore: file_names
 import 'package:settings_ui/settings_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,41 +11,37 @@ class SettingsData {
   SettingsData(
       {this.nRows = 6,
       this.allowDuplicates = true,
-      this.bestTime = 0x7fffffffffffffff});
+      this.bestTime = Utils.maxInt});
 }
 
 class Settings extends StatefulWidget {
-  final bool duplicates;
-  final int nMaxRows;
-  const Settings(this.duplicates, this.nMaxRows, {Key? key}) : super(key: key);
+  final SettingsData settings;
+  const Settings(this.settings, {super.key});
 
   @override
   State<Settings> createState() => _SettingsState();
 }
 
 class _SettingsState extends State<Settings> {
-  SettingsData settings = SettingsData();
   late SharedPreferences prefs;
   String currentTimeText = "Not yet set";
   @override
   void initState() {
     super.initState();
-    settings.allowDuplicates = widget.duplicates;
-    settings.nRows = widget.nMaxRows;
     getBestTime();
   }
 
   getBestTime() async {
     prefs = await SharedPreferences.getInstance();
-    settings.bestTime = prefs.getInt('besttime') ?? -1;
-    if (settings.bestTime == -1) {
+    widget.settings.bestTime = prefs.getInt(Utils.bestTimeKey) ?? -1;
+    if (widget.settings.bestTime == -1) {
       setState(() {
         currentTimeText = "Not yet set";
       });
       return;
     }
     setState(() {
-      currentTimeText = Utils.formatTime(settings.bestTime);
+      currentTimeText = Utils.formatTime(widget.settings.bestTime);
     });
   }
 
@@ -55,7 +52,7 @@ class _SettingsState extends State<Settings> {
         backgroundColor: const Color.fromARGB(255, 88, 91, 93),
         body: WillPopScope(
             onWillPop: () async {
-              Navigator.pop(context, settings);
+              Navigator.pop(context, widget.settings);
               return false;
             },
             child: Column(
@@ -82,10 +79,10 @@ class _SettingsState extends State<Settings> {
                           leading: const Icon(Icons.filter_none),
                           onToggle: (bool value) {
                             setState(() {
-                              settings.allowDuplicates = value;
+                              widget.settings.allowDuplicates = value;
                             });
                           },
-                          initialValue: settings.allowDuplicates,
+                          initialValue: widget.settings.allowDuplicates,
                         ),
                         SettingsTile(
                           title: const Text(textScaleFactor: 1.1, 'Rows'),
@@ -94,14 +91,15 @@ class _SettingsState extends State<Settings> {
                             max: 15,
                             onChanged: (double value) {
                               setState(() {
-                                settings.nRows = value.toInt();
+                                widget.settings.nRows = value.toInt();
                               });
                             },
-                            value: settings.nRows.toDouble(),
+                            value: widget.settings.nRows.toDouble(),
                           ),
                           leading: const Icon(Icons.list),
                           trailing: Text(
-                              textScaleFactor: 1.3, settings.nRows.toString()),
+                              textScaleFactor: 1.3,
+                              widget.settings.nRows.toString()),
                         ),
                         SettingsTile(
                           title: const Text('Best Time'),
@@ -112,7 +110,7 @@ class _SettingsState extends State<Settings> {
                                     Future.delayed(Duration.zero, () async {
                                       await prefs.remove(Utils.bestTimeKey);
                                       setState(() {
-                                        settings.bestTime = Utils.maxInt;
+                                        widget.settings.bestTime = Utils.maxInt;
                                         currentTimeText = "Not yet set";
                                       });
                                     })

@@ -26,8 +26,6 @@ class Board extends StatefulWidget {
 class _BoardState extends State<Board> with WidgetsBindingObserver {
   late Controller controller;
   int nRows = 1;
-  bool done = false;
-  bool win = false;
   late SharedPreferences prefs;
   late Dependencies timerController;
   int nMaxRows = 9;
@@ -63,8 +61,6 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
     timerController.stopwatch.reset();
 
     setState(() {
-      done = false;
-      win = false;
       combinations = [];
       combinations.addAll(List.generate(nMaxRows,
           (index) => [Colors.grey, Colors.grey, Colors.grey, Colors.grey]));
@@ -121,7 +117,6 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
                 prefs.getInt(Utils.bestTimeKey))
             .showAlertDialog(context);
         setState(() {
-          done = true;
           timerController.stopwatch.stop();
           timerisRunning = false;
         });
@@ -135,10 +130,10 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
       return colors;
     } on WinException {
       //WIN
-      int bestTime = min(prefs.getInt('besttime') ?? 0x7fffffffffffffff,
+      int bestTime = min(prefs.getInt(Utils.bestTimeKey) ?? Utils.maxInt,
           timerController.stopwatch.elapsedMilliseconds);
       Future.delayed(Duration.zero, () async {
-        await prefs.setInt('besttime', bestTime);
+        await prefs.setInt(Utils.bestTimeKey, bestTime);
       });
       WinLost(restart, true, controller.currenCombination,
               timerController.stopwatch.elapsedMilliseconds, bestTime)
@@ -205,7 +200,7 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
                   child: Text(
                       style: const TextStyle(
                           color: Color.fromARGB(255, 164, 177, 183)),
-                      textScaleFactor: 1.5,
+                      textScaleFactor: 1.7,
                       "Tries left ${(nMaxRows - boardRowsWidgets.length) + 1}")),
             ),
             Align(
@@ -219,7 +214,8 @@ class _BoardState extends State<Board> with WidgetsBindingObserver {
                   timerController.stopwatch.stop();
                   Navigator.of(context)
                       .push(MaterialPageRoute<SettingsData>(
-                    builder: (context) => Settings(duplicates, nMaxRows),
+                    builder: (context) => Settings(SettingsData(
+                        allowDuplicates: duplicates, nRows: nMaxRows)),
                   ))
                       .then((value) {
                     if (value != null) {
