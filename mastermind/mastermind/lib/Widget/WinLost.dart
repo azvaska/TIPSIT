@@ -67,7 +67,7 @@ class WinLost {
       title: Text(
           textAlign: TextAlign.center,
           textScaleFactor: 1.4,
-          "You ${win ? 'Win' : 'Lost'}"),
+          "You ${win ? 'Won!' : 'Lost'}"),
       content: SizedBox(height: height, child: Column(children: content)),
       actions: [resetButton],
     );

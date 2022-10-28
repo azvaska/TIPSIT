@@ -36,7 +36,7 @@ class _CombinationRowState extends State<CombinationRow> {
             ScaffoldMessenger.of(context).clearSnackBars();
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               backgroundColor: Colors.red,
-              content: Text("You need to fill all circles with color"),
+              content: Text("You need to fill all circles with a color"),
             ));
             return;
           }
