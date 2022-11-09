@@ -1,283 +1,114 @@
+import 'package:duration/duration.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'package:timer_dp/Screens/numpad.dart';
 
-class ElapsedTime {
-  final int hundreds;
-  final int seconds;
-  final int minutes;
+import 'timerpage.dart';
 
-  ElapsedTime({
-    required this.hundreds,
-    required this.seconds,
-    required this.minutes,
-  });
-}
-
-class TimerPage extends StatefulWidget {
-  static const Duration timerMillisecondsRefreshRate =
-      Duration(milliseconds: 30);
-  final Duration timerDuration;
-
-  const TimerPage({super.key, required this.timerDuration});
+class TimerScreen extends StatefulWidget {
+  const TimerScreen({super.key});
 
   @override
-  TimerPageState createState() => TimerPageState();
+  State<TimerScreen> createState() => _TimerScreenState();
 }
 
-class TimerPageState extends State<TimerPage> {
-  late Stream<ElapsedTime> timeStreams;
-  bool reset = false;
-  late StreamController<ElapsedTime> controllerTimeConverted;
-
-  late Duration currentRemainingTime;
-  late StreamSubscription<int> subscriptionTimerMs;
-
-  Stream<ElapsedTime> convertedTimeStream(Stream<int> timedCounter) {
-    subscriptionTimerMs = timedCounter.listen((int ms) {
-      controllerTimeConverted.add(convertTime(ms));
+class _TimerScreenState extends State<TimerScreen> {
+  final TextEditingController _myController = TimeTextController();
+  Duration? timerDuration;
+  void cancelTimer() {
+    setState(() {
+      timerDuration = null;
+      _myController.clear();
     });
-    subscriptionTimerMs.pause();
-    subscriptionTimerMs.pause();
-    controllerTimeConverted = StreamController<ElapsedTime>(
-        onListen: () => subscriptionTimerMs.resume(),
-        onPause: () => subscriptionTimerMs.pause(),
-        onResume: () => subscriptionTimerMs.resume(),
-        onCancel: () {
-          subscriptionTimerMs.cancel();
-        });
-
-    return controllerTimeConverted.stream.asBroadcastStream();
-  }
-
-  Stream<int> timedCounter(Duration interval) {
-    Timer? timer;
-    late StreamController<int> controller;
-
-    void tick(_) {
-      currentRemainingTime = currentRemainingTime - interval;
-      controller.add(currentRemainingTime
-          .inMilliseconds); // Ask stream to send counter values as event.
-      if (currentRemainingTime.isNegative) {
-        timer?.cancel();
-        controller.close(); // Ask stream to shut down and tell listeners.
-      }
-    }
-
-    void startTimerPage() {
-      timer = Timer.periodic(interval, tick);
-    }
-
-    void stopTimerPage() {
-      timer?.cancel();
-      timer = null;
-    }
-
-    controller = StreamController<int>(
-        onListen: startTimerPage,
-        onPause: stopTimerPage,
-        onResume: startTimerPage,
-        onCancel: stopTimerPage);
-    return controller.stream;
-  }
-
-  @override
-  void initState() {
-    currentRemainingTime =
-        Duration(milliseconds: widget.timerDuration.inMilliseconds);
-    timeStreams = convertedTimeStream(
-        timedCounter(TimerPage.timerMillisecondsRefreshRate));
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    subscriptionTimerMs.cancel();
-    super.dispose();
-  }
-
-  // void callback(TimerPage timerPage) {}
-  ElapsedTime convertTime(int milliseconds) {
-    final int hundreds = (milliseconds / 10).truncate();
-    final int seconds = (hundreds / 100).truncate();
-    final int minutes = (seconds / 60).truncate();
-    final ElapsedTime elapsedTime = ElapsedTime(
-      hundreds: hundreds,
-      seconds: seconds,
-      minutes: minutes,
-    );
-    return elapsedTime;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            RepaintBoundary(
-              child: MinutesAndSeconds(
-                dependencies: timeStreams,
-                key: ValueKey(reset),
+    return timerDuration != null
+        ? Center(
+            child: TimerPage(
+            timerDuration: timerDuration!,
+            cancelTimer: cancelTimer,
+          ))
+        : Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: SizedBox(
+                  height: 120,
+                  child: Center(
+                      child: TextField(
+                    controller: _myController,
+                    textAlign: TextAlign.center,
+                    showCursor: false,
+                    style: const TextStyle(fontSize: 40),
+                    // Disable the default soft keybaord
+                    keyboardType: TextInputType.none,
+                  )),
+                ),
               ),
-            ),
-            RepaintBoundary(
-              child: Hundreds(dependencies: timeStreams, key: ValueKey(reset)),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                      onPressed: (() {
-                        subscriptionTimerMs.resume();
-                      }),
-                      child: const Text("Start")),
-                )),
-            Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                      onPressed: (() {
-                        setState(() {
-                          subscriptionTimerMs.isPaused
-                              ? subscriptionTimerMs.resume()
-                              : subscriptionTimerMs.pause();
-                        });
-                      }),
-                      child: Text(
-                          subscriptionTimerMs.isPaused ? "Resume" : "Stop")),
-                )),
-            Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                      onPressed: (() {
-                        setState(() {
-                          // subscriptionTimerMs.cancel();
-                          Future.delayed(const Duration(milliseconds: 0),
-                              () async {
-                            print(await controllerTimeConverted.close());
-                          }).then((value) => {
-                                setState(() {
-                                  reset = !reset;
-                                  currentRemainingTime = Duration(
-                                      milliseconds:
-                                          widget.timerDuration.inMilliseconds);
-                                  timeStreams = convertedTimeStream(
-                                      timedCounter(TimerPage
-                                          .timerMillisecondsRefreshRate));
-                                })
-                              });
-                        });
-                      }),
-                      child: const Text("Reset")),
-                )),
-          ],
-        ),
-      ],
+              // implement the custom NumPad
+              NumPad(
+                buttonSize: 85,
+                buttonColor: Colors.purple,
+                iconColor: Colors.deepOrange,
+                controller: _myController,
+                delete: () {
+                  _myController.text = "delete";
+                },
+                // do something with the input numbers
+                onSubmit: () {
+                  setState(() {
+                    timerDuration =
+                        parseDuration(_myController.text, separator: ":");
+                  });
+                },
+              ),
+            ],
+          );
+  }
+}
+
+class TimeTextController extends TextEditingController {
+  String _timeinternal = "";
+  static const List<String> separators = ["h", "m", "s"];
+
+  @override
+  clear() {
+    _timeinternal = "";
+    value = const TextEditingValue(
+        text: '00h:00m:00s', selection: TextSelection.collapsed(offset: 0));
+  }
+
+  @override
+  set text(String newText) {
+    if (_timeinternal.length >= 6 && newText != "delete") {
+      value = value.copyWith(
+        text: value.text,
+        selection: const TextSelection.collapsed(offset: -1),
+        composing: TextRange.empty,
+      );
+      return;
+    }
+    if (newText == "delete") {
+      if (_timeinternal.isNotEmpty) {
+        _timeinternal = _timeinternal.substring(0, _timeinternal.length - 1);
+      }
+    } else {
+      _timeinternal += newText;
+    }
+    String tempValue = _timeinternal;
+    RegExp exp = RegExp(r"\d{2}");
+    tempValue = _timeinternal.padLeft(6, '0').splitMapJoin(exp,
+        onMatch: (m) => "${m.group(0)}${separators[m.start ~/ 2]}:");
+    tempValue = tempValue.substring(0, tempValue.length - 1);
+    value = value.copyWith(
+      text: tempValue,
+      selection: const TextSelection.collapsed(offset: -1),
+      composing: TextRange.empty,
     );
   }
-}
 
-class MinutesAndSeconds extends StatefulWidget {
-  const MinutesAndSeconds({super.key, required this.dependencies});
-  final Stream<ElapsedTime> dependencies;
-
-  @override
-  MinutesAndSecondsState createState() => MinutesAndSecondsState();
-}
-
-class MinutesAndSecondsState extends State<MinutesAndSeconds> {
-  MinutesAndSecondsState();
-  late StreamSubscription<ElapsedTime> streamSubMinutesAndSeconds;
-  int minutes = 0;
-  int seconds = 0;
-
-  @override
-  void initState() {
-    streamSubMinutesAndSeconds = widget.dependencies.listen(onDone: () => print,
-        (ElapsedTime elapsedTime) {
-      onTick(elapsedTime);
-    });
-    super.initState();
-  }
-
-  void onTick(ElapsedTime elapsed) {
-    if (elapsed.minutes != minutes || elapsed.seconds != seconds) {
-      setState(() {
-        minutes = elapsed.minutes;
-        seconds = elapsed.seconds;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    streamSubMinutesAndSeconds.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    String minutesStr = (minutes % 60).toString().padLeft(2, '0');
-    String secondsStr = (seconds % 60).toString().padLeft(2, '0');
-    return Text(
-        style: const TextStyle(color: Colors.black),
-        textScaleFactor: 2,
-        '$minutesStr:$secondsStr.');
-  }
-}
-
-class Hundreds extends StatefulWidget {
-  const Hundreds({super.key, required this.dependencies});
-  final Stream<ElapsedTime> dependencies;
-
-  @override
-  HundredsState createState() => HundredsState();
-}
-
-class HundredsState extends State<Hundreds> {
-  HundredsState();
-  late StreamSubscription<ElapsedTime> StreamSubHundreds;
-
-  int hundreds = 0;
-
-  @override
-  void initState() {
-    StreamSubHundreds = widget.dependencies
-        .listen(onDone: () => print("DIOCAN"), (ElapsedTime elapsedTime) {
-      onTick(elapsedTime);
-    });
-    super.initState();
-  }
-
-  void onTick(ElapsedTime elapsed) {
-    if (elapsed.hundreds != hundreds) {
-      setState(() {
-        hundreds = elapsed.hundreds;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    StreamSubHundreds.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    String hundredsStr = (hundreds % 100).toString().padLeft(2, '0');
-    return Text(
-        textScaleFactor: 2,
-        style: const TextStyle(color: Colors.black),
-        hundredsStr);
+  TimeTextController() {
+    super.text = '00h:00m:00s';
   }
 }

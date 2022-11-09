@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:timer_dp/Screens/timer.dart';
 
 class HomePage extends StatefulWidget {
@@ -10,11 +8,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-List<Widget> screens = [
-  const TimerPage(
-    timerDuration: Duration(minutes: 1),
-  )
-];
+List<Widget> screens = [const TimerScreen()];
 
 class _HomePageState extends State<HomePage> {
   int _currentScreenIndex = 0;
@@ -22,11 +16,11 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
-        selectedFontSize: 20,
+        selectedFontSize: 15,
         selectedIconTheme:
-            const IconThemeData(color: Colors.amberAccent, size: 40),
-        selectedItemColor: Colors.amberAccent,
-        selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),
+            const IconThemeData(color: Color.fromARGB(255, 0, 0, 0), size: 40),
+        selectedItemColor: const Color.fromARGB(255, 0, 0, 0),
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
         currentIndex: _currentScreenIndex,
         onTap: (int index) {
           setState(() {
