@@ -6,11 +6,13 @@ class ElapsedTime {
   final int hundreds;
   final int seconds;
   final int minutes;
+  final int hours;
 
   ElapsedTime({
     required this.hundreds,
     required this.seconds,
     required this.minutes,
+    required this.hours,
   });
 }
 
@@ -35,7 +37,7 @@ class TimerPageState extends State<TimerPage> {
   late StreamSubscription<int> subscriptionTimerMs;
 
   late ElapsedTime defaultTime;
-
+//
   Stream<ElapsedTime> convertedTimeStream(Stream<int> timedCounter) {
     subscriptionTimerMs = timedCounter.listen((int ms) {
       controllerTimeConverted.add(convertTime(ms));
@@ -107,41 +109,44 @@ class TimerPageState extends State<TimerPage> {
     final int hundreds = (milliseconds / 10).truncate();
     final int seconds = (hundreds / 100).truncate();
     final int minutes = (seconds / 60).truncate();
+    final int hours = (minutes / 60).truncate();
+
     final ElapsedTime elapsedTime = ElapsedTime(
       hundreds: hundreds,
       seconds: seconds,
       minutes: minutes,
+      hours: hours,
     );
     return elapsedTime;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            RepaintBoundary(
-              child: MinutesAndSeconds(
-                timeStream: timeStreams,
-                defaultTime: defaultTime,
-                key: ValueKey(reset),
-              ),
-            ),
-            RepaintBoundary(
-              child: Hundreds(
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              RepaintBoundary(
+                child: MinutesAndSeconds(
                   timeStream: timeStreams,
                   defaultTime: defaultTime,
-                  key: ValueKey(reset)),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            Expanded(
-                flex: 1,
+                  key: ValueKey(reset),
+                ),
+              ),
+              RepaintBoundary(
+                child: Hundreds(
+                    timeStream: timeStreams,
+                    defaultTime: defaultTime,
+                    key: ValueKey(reset)),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
@@ -149,9 +154,9 @@ class TimerPageState extends State<TimerPage> {
                         subscriptionTimerMs.resume();
                       }),
                       child: const Text("Start")),
-                )),
-            Expanded(
-                flex: 1,
+                ),
+              ),
+              Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
@@ -164,9 +169,9 @@ class TimerPageState extends State<TimerPage> {
                       }),
                       child: Text(
                           subscriptionTimerMs.isPaused ? "Resume" : "Stop")),
-                )),
-            Expanded(
-                flex: 1,
+                ),
+              ),
+              Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
@@ -185,28 +190,36 @@ class TimerPageState extends State<TimerPage> {
                                   timeStreams = convertedTimeStream(
                                       timedCounter(TimerPage
                                           .timerMillisecondsRefreshRate));
+                                  subscriptionTimerMs.pause();
+                                  subscriptionTimerMs.pause();
                                 })
                               });
                         });
                       }),
                       child: const Text("Reset")),
-                )),
-          ],
-        ),
-        Center(
-          child: Expanded(
-              flex: 1,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                    onPressed: (() {
-                      subscriptionTimerMs.cancel();
-                      widget.cancelTimer();
-                    }),
-                    child: const Text("cancel")),
-              )),
-        )
-      ],
+                ),
+              ),
+            ],
+          ),
+          Center(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                        onPressed: (() {
+                          subscriptionTimerMs.cancel();
+                          widget.cancelTimer();
+                        }),
+                        child: const Text("cancel")),
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }
@@ -225,7 +238,7 @@ class MinutesAndSecondsState extends State<MinutesAndSeconds> {
   late StreamSubscription<ElapsedTime> streamSubMinutesAndSeconds;
   int minutes = 0;
   int seconds = 0;
-
+  int hours = 0;
   @override
   void initState() {
     onTick(widget.defaultTime);
@@ -238,10 +251,13 @@ class MinutesAndSecondsState extends State<MinutesAndSeconds> {
   }
 
   void onTick(ElapsedTime elapsed) {
-    if (elapsed.minutes != minutes || elapsed.seconds != seconds) {
+    if (elapsed.minutes != minutes ||
+        elapsed.seconds != seconds ||
+        elapsed.hours != hours) {
       setState(() {
         minutes = elapsed.minutes;
         seconds = elapsed.seconds;
+        hours = elapsed.hours;
       });
     }
   }
@@ -256,9 +272,11 @@ class MinutesAndSecondsState extends State<MinutesAndSeconds> {
   Widget build(BuildContext context) {
     String minutesStr = (minutes % 60).toString().padLeft(2, '0');
     String secondsStr = (seconds % 60).toString().padLeft(2, '0');
+    String hoursStr = (hours % 60).toString().padLeft(2, '0');
+
     return Text(
-        style: const TextStyle(color: Colors.black, fontSize: 90),
-        '$minutesStr:$secondsStr.');
+        style: const TextStyle(color: Colors.black, fontSize: 50),
+        '$hoursStr:$minutesStr:$secondsStr.');
   }
 }
 
@@ -307,6 +325,6 @@ class HundredsState extends State<Hundreds> {
   Widget build(BuildContext context) {
     String hundredsStr = (hundreds % 100).toString().padLeft(2, '0');
     return Text(
-        style: const TextStyle(color: Colors.black, fontSize: 90), hundredsStr);
+        style: const TextStyle(color: Colors.black, fontSize: 50), hundredsStr);
   }
 }

@@ -24,11 +24,16 @@ class _TimerScreenState extends State<TimerScreen> {
   @override
   Widget build(BuildContext context) {
     return timerDuration != null
-        ? Center(
-            child: TimerPage(
-            timerDuration: timerDuration!,
-            cancelTimer: cancelTimer,
-          ))
+        ? Column(
+            children: [
+              Expanded(
+                child: TimerPage(
+                  timerDuration: timerDuration!,
+                  cancelTimer: cancelTimer,
+                ),
+              ),
+            ],
+          )
         : Column(
             children: [
               Padding(
@@ -81,6 +86,9 @@ class TimeTextController extends TextEditingController {
 
   @override
   set text(String newText) {
+    if (newText.startsWith("0") && _timeinternal.isEmpty) {
+      return;
+    }
     if (_timeinternal.length >= 6 && newText != "delete") {
       value = value.copyWith(
         text: value.text,
