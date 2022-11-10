@@ -5,14 +5,16 @@ import 'package:timer_dp/Screens/numpad.dart';
 import 'timerpage.dart';
 
 class TimerScreen extends StatefulWidget {
-  const TimerScreen({super.key});
+  final bool isTimer;
+
+  const TimerScreen({super.key, this.isTimer = true});
 
   @override
   State<TimerScreen> createState() => _TimerScreenState();
 }
 
 class _TimerScreenState extends State<TimerScreen> {
-  final TextEditingController _myController = TimeTextController();
+  final TimeTextController _myController = TimeTextController();
   Duration? timerDuration;
   void cancelTimer() {
     setState(() {
@@ -30,18 +32,31 @@ class _TimerScreenState extends State<TimerScreen> {
                 child: TimerPage(
                   timerDuration: timerDuration!,
                   cancelTimer: cancelTimer,
+                  isTimer: widget.isTimer,
                 ),
               ),
             ],
           )
         : Column(
             children: [
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.only(top: 5.0),
+                  child: Text(
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 30,
+                      ),
+                      "Timer"),
+                ),
+              ),
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                 child: SizedBox(
                   height: 120,
                   child: Center(
                       child: TextField(
+                    enableInteractiveSelection: false,
                     controller: _myController,
                     textAlign: TextAlign.center,
                     showCursor: false,
@@ -54,8 +69,8 @@ class _TimerScreenState extends State<TimerScreen> {
               // implement the custom NumPad
               NumPad(
                 buttonSize: 85,
-                buttonColor: Colors.purple,
-                iconColor: Colors.deepOrange,
+                buttonColor: const Color.fromARGB(255, 19, 64, 186),
+                iconColor: const Color.fromARGB(247, 5, 25, 79),
                 controller: _myController,
                 delete: () {
                   _myController.text = "delete";
@@ -63,8 +78,10 @@ class _TimerScreenState extends State<TimerScreen> {
                 // do something with the input numbers
                 onSubmit: () {
                   setState(() {
-                    timerDuration =
-                        parseDuration(_myController.text, separator: ":");
+                    if (_myController.realTimeStr.isNotEmpty) {
+                      timerDuration =
+                          parseDuration(_myController.text, separator: ":");
+                    }
                   });
                 },
               ),
@@ -74,22 +91,22 @@ class _TimerScreenState extends State<TimerScreen> {
 }
 
 class TimeTextController extends TextEditingController {
-  String _timeinternal = "";
+  String realTimeStr = "";
   static const List<String> separators = ["h", "m", "s"];
 
   @override
   clear() {
-    _timeinternal = "";
+    realTimeStr = "";
     value = const TextEditingValue(
         text: '00h:00m:00s', selection: TextSelection.collapsed(offset: 0));
   }
 
   @override
   set text(String newText) {
-    if (newText.startsWith("0") && _timeinternal.isEmpty) {
+    if (newText.startsWith("0") && realTimeStr.isEmpty) {
       return;
     }
-    if (_timeinternal.length >= 6 && newText != "delete") {
+    if (realTimeStr.length >= 6 && newText != "delete") {
       value = value.copyWith(
         text: value.text,
         selection: const TextSelection.collapsed(offset: -1),
@@ -98,15 +115,15 @@ class TimeTextController extends TextEditingController {
       return;
     }
     if (newText == "delete") {
-      if (_timeinternal.isNotEmpty) {
-        _timeinternal = _timeinternal.substring(0, _timeinternal.length - 1);
+      if (realTimeStr.isNotEmpty) {
+        realTimeStr = realTimeStr.substring(0, realTimeStr.length - 1);
       }
     } else {
-      _timeinternal += newText;
+      realTimeStr += newText;
     }
-    String tempValue = _timeinternal;
+    String tempValue = realTimeStr;
     RegExp exp = RegExp(r"\d{2}");
-    tempValue = _timeinternal.padLeft(6, '0').splitMapJoin(exp,
+    tempValue = realTimeStr.padLeft(6, '0').splitMapJoin(exp,
         onMatch: (m) => "${m.group(0)}${separators[m.start ~/ 2]}:");
     tempValue = tempValue.substring(0, tempValue.length - 1);
     value = value.copyWith(

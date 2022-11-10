@@ -22,12 +22,15 @@ class NumPad extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var height = MediaQuery.of(context).size.height;
+    var padding = MediaQuery.of(context).padding;
+    var safeHeight = height - padding.top - padding.bottom;
     return Expanded(
       child: Container(
         margin: const EdgeInsets.only(left: 30, right: 30),
         child: Column(
           children: [
-            const SizedBox(height: 10),
+            SizedBox(height: safeHeight * 0.01),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               // implement the number keys (from 0 to 9) with the NumberButton widget
@@ -53,7 +56,7 @@ class NumPad extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: safeHeight * 0.01),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -77,7 +80,7 @@ class NumPad extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: safeHeight * 0.01),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -101,35 +104,38 @@ class NumPad extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                NumberButton(
-                  number: 0,
-                  size: buttonSize,
-                  color: buttonColor,
-                  controller: controller,
-                  customNumber: "00",
-                ),
-                // this button is used to delete the last number
-
-                NumberButton(
-                  number: 0,
-                  size: buttonSize,
-                  color: buttonColor,
-                  controller: controller,
-                ),
-                IconButton(
-                  onPressed: () => delete(),
-                  icon: Icon(
-                    Icons.backspace,
-                    color: iconColor,
+            SizedBox(height: safeHeight * 0.01),
+            Padding(
+              padding: const EdgeInsets.only(left: 9, right: 5),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  NumberButton(
+                    number: 0,
+                    size: buttonSize,
+                    color: buttonColor,
+                    controller: controller,
+                    customNumber: "00",
                   ),
-                  iconSize: buttonSize,
-                ),
-                // this button is used to submit the entered value
-              ],
+                  // this button is used to delete the last number
+
+                  NumberButton(
+                    number: 0,
+                    size: buttonSize,
+                    color: buttonColor,
+                    controller: controller,
+                  ),
+                  IconButton(
+                    onPressed: () => delete(),
+                    icon: Icon(
+                      Icons.backspace,
+                      color: iconColor,
+                    ),
+                    iconSize: buttonSize,
+                  ),
+                  // this button is used to submit the entered value
+                ],
+              ),
             ),
             IconButton(
               onPressed: () => onSubmit(),

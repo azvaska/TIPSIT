@@ -21,13 +21,8 @@ class TimerPage extends StatefulWidget {
       Duration(milliseconds: 30);
   final Duration timerDuration;
   final void Function() cancelTimer;
-  final bool isTimer;
-  void cancelTimerdef() {}
   const TimerPage(
-      {super.key,
-      this.timerDuration = const Duration(milliseconds: 0),
-      required this.cancelTimer,
-      required this.isTimer});
+      {super.key, required this.timerDuration, required this.cancelTimer});
 
   @override
   TimerPageState createState() => TimerPageState();
@@ -47,11 +42,8 @@ class TimerPageState extends State<TimerPage> {
     subscriptionTimerMs = timedCounter.listen((int ms) {
       controllerTimeConverted.add(convertTime(ms));
     });
-    if (!widget.isTimer) {
-      subscriptionTimerMs.pause();
-      subscriptionTimerMs.pause();
-    }
-
+    // subscriptionTimerMs.pause();
+    // subscriptionTimerMs.pause();
     controllerTimeConverted = StreamController<ElapsedTime>(
         onListen: () => {subscriptionTimerMs.resume()},
         onPause: () => subscriptionTimerMs.pause(),
@@ -63,11 +55,11 @@ class TimerPageState extends State<TimerPage> {
     return controllerTimeConverted.stream.asBroadcastStream();
   }
 
-  Stream<int> timedCounter(Duration interval, bool isTimer) {
+  Stream<int> timedCounter(Duration interval) {
     Timer? timer;
     late StreamController<int> controller;
 
-    void tickDown(_) {
+    void tick(_) {
       currentRemainingTime = currentRemainingTime - interval;
       controller.add(currentRemainingTime
           .inMilliseconds); // Ask stream to send counter values as event.
@@ -78,14 +70,8 @@ class TimerPageState extends State<TimerPage> {
       }
     }
 
-    void tickUp(_) {
-      currentRemainingTime = currentRemainingTime + interval;
-      controller.add(currentRemainingTime
-          .inMilliseconds); // Ask stream to send counter values as event.
-    }
-
     void startTimerPage() {
-      timer = Timer.periodic(interval, isTimer ? tickDown : tickUp);
+      timer = Timer.periodic(interval, tick);
     }
 
     void stopTimerPage() {
@@ -108,7 +94,7 @@ class TimerPageState extends State<TimerPage> {
     defaultTime = convertTime(currentRemainingTime.inMilliseconds);
 
     timeStreams = convertedTimeStream(
-        timedCounter(TimerPage.timerMillisecondsRefreshRate, widget.isTimer));
+        timedCounter(TimerPage.timerMillisecondsRefreshRate));
     super.initState();
   }
 
@@ -137,7 +123,7 @@ class TimerPageState extends State<TimerPage> {
   void restartTimer(Duration currentRemainingTime) {
     reset = !reset;
     timeStreams = convertedTimeStream(
-        timedCounter(TimerPage.timerMillisecondsRefreshRate, widget.isTimer));
+        timedCounter(TimerPage.timerMillisecondsRefreshRate));
     subscriptionTimerMs.pause();
     subscriptionTimerMs.pause();
   }
@@ -168,26 +154,24 @@ class TimerPageState extends State<TimerPage> {
           ),
           Row(
             children: [
-              Visibility(
-                  visible: widget.isTimer,
-                  child: Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ElevatedButton(
-                          onPressed: (() {
-                            // subscriptionTimerMs.resume();
-                            currentRemainingTime += const Duration(minutes: 1);
-                            if (subscriptionTimerMs.isPaused) {
-                              setState(() {
-                                restartTimer(currentRemainingTime);
-                                defaultTime = convertTime(
-                                    currentRemainingTime.inMilliseconds);
-                              });
-                            }
-                          }),
-                          child: const Text("+1 min")),
-                    ),
-                  )),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                      onPressed: (() {
+                        // subscriptionTimerMs.resume();
+                        currentRemainingTime += const Duration(minutes: 1);
+                        if (subscriptionTimerMs.isPaused) {
+                          setState(() {
+                            restartTimer(currentRemainingTime);
+                            defaultTime = convertTime(
+                                currentRemainingTime.inMilliseconds);
+                          });
+                        }
+                      }),
+                      child: const Text("+1 min")),
+                ),
+              ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -231,25 +215,23 @@ class TimerPageState extends State<TimerPage> {
               ),
             ],
           ),
-          Visibility(
-              visible: widget.isTimer,
-              child: Center(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: ElevatedButton(
-                            onPressed: (() {
-                              subscriptionTimerMs.cancel();
-                              widget.cancelTimer();
-                            }),
-                            child: const Text("cancel")),
-                      ),
-                    ),
-                  ],
+          Center(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                        onPressed: (() {
+                          subscriptionTimerMs.cancel();
+                          widget.cancelTimer();
+                        }),
+                        child: const Text("cancel")),
+                  ),
                 ),
-              ))
+              ],
+            ),
+          )
         ],
       ),
     );
