@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:timer_dp/Screens/time_button.dart';
 
 class ElapsedTime {
   final int hundreds;
@@ -33,7 +35,7 @@ class TimerPage extends StatefulWidget {
   TimerPageState createState() => TimerPageState();
 }
 
-class TimerPageState extends State<TimerPage> {
+class TimerPageState extends State<TimerPage> with WidgetsBindingObserver {
   late Stream<ElapsedTime> timeStreams;
   bool reset = false;
   late StreamController<ElapsedTime> controllerTimeConverted;
@@ -42,6 +44,7 @@ class TimerPageState extends State<TimerPage> {
   late StreamSubscription<int> subscriptionTimerMs;
 
   late ElapsedTime defaultTime;
+
 //
   Stream<ElapsedTime> convertedTimeStream(Stream<int> timedCounter) {
     subscriptionTimerMs = timedCounter.listen((int ms) {
@@ -72,6 +75,28 @@ class TimerPageState extends State<TimerPage> {
       controller.add(currentRemainingTime
           .inMilliseconds); // Ask stream to send counter values as event.
       if ((currentRemainingTime - interval).inMilliseconds <= 1) {
+        FlutterRingtonePlayer.play(
+            looping: true,
+            asAlarm: true,
+            fromAsset: "assets/audio/loud_indian_music.mp3");
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text("Timer"),
+                content: const Text("Timer has finished"),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      FlutterRingtonePlayer.stop();
+                    },
+                    child: const Text("OK"),
+                  ),
+                ],
+              );
+            });
+
         controller.add(0);
         timer?.cancel();
         controller.close(); // Ask stream to shut down and tell listeners.
@@ -110,11 +135,21 @@ class TimerPageState extends State<TimerPage> {
     timeStreams = convertedTimeStream(
         timedCounter(TimerPage.timerMillisecondsRefreshRate, widget.isTimer));
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      FlutterRingtonePlayer.stop();
+    }
   }
 
   @override
   void dispose() {
     subscriptionTimerMs.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    FlutterRingtonePlayer.stop();
     super.dispose();
   }
 
@@ -144,6 +179,16 @@ class TimerPageState extends State<TimerPage> {
     }
   }
 
+  void addTime(Duration time) {
+    currentRemainingTime += time;
+    if (subscriptionTimerMs.isPaused) {
+      setState(() {
+        restartTimer(currentRemainingTime);
+        defaultTime = convertTime(currentRemainingTime.inMilliseconds);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -168,28 +213,34 @@ class TimerPageState extends State<TimerPage> {
               ),
             ],
           ),
+          Visibility(
+              visible: widget.isTimer,
+              child: Row(
+                children: [
+                  TimerChangeTimeButton(
+                    time: const Duration(minutes: -1),
+                    addTime: addTime,
+                    textValue: "-1 min",
+                  ),
+                  TimerChangeTimeButton(
+                    time: const Duration(seconds: -30),
+                    addTime: addTime,
+                    textValue: "-30 sec",
+                  ),
+                  TimerChangeTimeButton(
+                    time: const Duration(seconds: 30),
+                    addTime: addTime,
+                    textValue: "+30 sec",
+                  ),
+                  TimerChangeTimeButton(
+                    time: const Duration(minutes: 1),
+                    addTime: addTime,
+                    textValue: "+1 min",
+                  ),
+                ],
+              )),
           Row(
             children: [
-              Visibility(
-                  visible: widget.isTimer,
-                  child: Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ElevatedButton(
-                          onPressed: (() {
-                            // subscriptionTimerMs.resume();
-                            currentRemainingTime += const Duration(minutes: 1);
-                            if (subscriptionTimerMs.isPaused) {
-                              setState(() {
-                                restartTimer(currentRemainingTime);
-                                defaultTime = convertTime(
-                                    currentRemainingTime.inMilliseconds);
-                              });
-                            }
-                          }),
-                          child: const Text("+1 min")),
-                    ),
-                  )),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
