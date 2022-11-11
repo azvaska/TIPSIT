@@ -19,8 +19,7 @@ class ElapsedTime {
 }
 
 class TimerPage extends StatefulWidget {
-  static const Duration timerMillisecondsRefreshRate =
-      Duration(milliseconds: 30);
+  static const int timerMillisecondsRefreshRate = 30;
   final Duration timerDuration;
   final void Function() cancelTimer;
   final bool isTimer;
@@ -38,9 +37,13 @@ class TimerPage extends StatefulWidget {
 class TimerPageState extends State<TimerPage> with WidgetsBindingObserver {
   late Stream<ElapsedTime> timeStreams;
   bool reset = false;
+  static const alertStyle = TextStyle(
+    fontSize: 25,
+    color: Colors.white,
+  );
   late StreamController<ElapsedTime> controllerTimeConverted;
 
-  late Duration currentRemainingTime;
+  late int currentRemainingTimeMs;
   late StreamSubscription<int> subscriptionTimerMs;
 
   late ElapsedTime defaultTime;
@@ -66,15 +69,16 @@ class TimerPageState extends State<TimerPage> with WidgetsBindingObserver {
     return controllerTimeConverted.stream.asBroadcastStream();
   }
 
-  Stream<int> timedCounter(Duration interval, bool isTimer) {
+  Stream<int> timedCounter(int interval, bool isTimer) {
     Timer? timer;
+
     late StreamController<int> controller;
 
     void tickDown(_) {
-      currentRemainingTime = currentRemainingTime - interval;
-      controller.add(currentRemainingTime
-          .inMilliseconds); // Ask stream to send counter values as event.
-      if ((currentRemainingTime - interval).inMilliseconds <= 1) {
+      currentRemainingTimeMs = currentRemainingTimeMs - interval;
+      controller.add(
+          currentRemainingTimeMs); // Ask stream to send counter values as event.
+      if ((currentRemainingTimeMs - interval) <= 1) {
         FlutterRingtonePlayer.play(
             looping: true,
             asAlarm: true,
@@ -83,15 +87,16 @@ class TimerPageState extends State<TimerPage> with WidgetsBindingObserver {
             context: context,
             builder: (context) {
               return AlertDialog(
-                title: const Text("Timer"),
-                content: const Text("Timer has finished"),
+                backgroundColor: const Color.fromARGB(255, 42, 81, 187),
+                title: const Text("Timer", style: alertStyle),
+                content: const Text(style: alertStyle, "Timer has finished"),
                 actions: [
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).pop();
                       FlutterRingtonePlayer.stop();
                     },
-                    child: const Text("OK"),
+                    child: const Text("OK", style: alertStyle),
                   ),
                 ],
               );
@@ -104,13 +109,14 @@ class TimerPageState extends State<TimerPage> with WidgetsBindingObserver {
     }
 
     void tickUp(_) {
-      currentRemainingTime = currentRemainingTime + interval;
-      controller.add(currentRemainingTime
-          .inMilliseconds); // Ask stream to send counter values as event.
+      currentRemainingTimeMs = currentRemainingTimeMs + interval;
+      controller.add(
+          currentRemainingTimeMs); // Ask stream to send counter values as event.
     }
 
     void startTimerPage() {
-      timer = Timer.periodic(interval, isTimer ? tickDown : tickUp);
+      timer = Timer.periodic(
+          Duration(milliseconds: interval), isTimer ? tickDown : tickUp);
     }
 
     void stopTimerPage() {
@@ -128,10 +134,8 @@ class TimerPageState extends State<TimerPage> with WidgetsBindingObserver {
 
   @override
   void initState() {
-    currentRemainingTime =
-        Duration(milliseconds: widget.timerDuration.inMilliseconds);
-    defaultTime = convertTime(currentRemainingTime.inMilliseconds);
-
+    currentRemainingTimeMs = widget.timerDuration.inMilliseconds;
+    defaultTime = convertTime(currentRemainingTimeMs);
     timeStreams = convertedTimeStream(
         timedCounter(TimerPage.timerMillisecondsRefreshRate, widget.isTimer));
     super.initState();
@@ -169,7 +173,7 @@ class TimerPageState extends State<TimerPage> with WidgetsBindingObserver {
     return elapsedTime;
   }
 
-  void restartTimer(Duration currentRemainingTime) {
+  void restartTimer() {
     reset = !reset;
     timeStreams = convertedTimeStream(
         timedCounter(TimerPage.timerMillisecondsRefreshRate, widget.isTimer));
@@ -180,11 +184,11 @@ class TimerPageState extends State<TimerPage> with WidgetsBindingObserver {
   }
 
   void addTime(Duration time) {
-    currentRemainingTime += time;
+    currentRemainingTimeMs += time.inMilliseconds;
     if (subscriptionTimerMs.isPaused) {
       setState(() {
-        restartTimer(currentRemainingTime);
-        defaultTime = convertTime(currentRemainingTime.inMilliseconds);
+        restartTimer();
+        defaultTime = convertTime(currentRemainingTimeMs);
       });
     }
   }
@@ -265,16 +269,15 @@ class TimerPageState extends State<TimerPage> with WidgetsBindingObserver {
                           // subscriptionTimerMs.cancel();
                           Future.delayed(const Duration(milliseconds: 0),
                               () async {
-                            print(await controllerTimeConverted.close());
+                            await controllerTimeConverted.close();
                           }).then((value) => {
                                 setState(() {
-                                  currentRemainingTime = Duration(
-                                      milliseconds:
-                                          widget.timerDuration.inMilliseconds);
+                                  currentRemainingTimeMs =
+                                      widget.timerDuration.inMilliseconds;
 
-                                  defaultTime = convertTime(
-                                      currentRemainingTime.inMilliseconds);
-                                  restartTimer(currentRemainingTime);
+                                  defaultTime =
+                                      convertTime(currentRemainingTimeMs);
+                                  restartTimer();
                                 })
                               });
                         });
