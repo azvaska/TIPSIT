@@ -138,8 +138,10 @@ class TimerPageState extends State<TimerPage> {
     reset = !reset;
     timeStreams = convertedTimeStream(
         timedCounter(TimerPage.timerMillisecondsRefreshRate, widget.isTimer));
-    subscriptionTimerMs.pause();
-    subscriptionTimerMs.pause();
+    if (widget.isTimer) {
+      subscriptionTimerMs.pause();
+      subscriptionTimerMs.pause();
+    }
   }
 
   @override
@@ -304,7 +306,7 @@ class MinutesAndSecondsState extends State<MinutesAndSeconds> {
   Widget build(BuildContext context) {
     String minutesStr = (minutes % 60).toString().padLeft(2, '0');
     String secondsStr = (seconds % 60).toString().padLeft(2, '0');
-    String hoursStr = (hours % 60).toString().padLeft(2, '0');
+    String hoursStr = (hours).toString().padLeft(2, '0');
 
     return Text(
         style: const TextStyle(color: Colors.black, fontSize: 50),

@@ -103,15 +103,16 @@ class TimeTextController extends TextEditingController {
 
   @override
   set text(String newText) {
-    if (newText.startsWith("0") && realTimeStr.isEmpty) {
-      return;
-    }
     if (realTimeStr.length >= 6 && newText != "delete") {
       value = value.copyWith(
         text: value.text,
         selection: const TextSelection.collapsed(offset: -1),
         composing: TextRange.empty,
       );
+      return;
+    }
+    if ((newText.startsWith("0") && realTimeStr.isEmpty) ||
+        (newText.startsWith("00") && realTimeStr.length == 5)) {
       return;
     }
     if (newText == "delete") {
