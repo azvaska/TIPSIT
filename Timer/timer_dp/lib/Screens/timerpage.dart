@@ -19,7 +19,7 @@ class ElapsedTime {
 }
 
 class TimerPage extends StatefulWidget {
-  static const int timerMillisecondsRefreshRate = 30;
+  static const int timerMillisecondsRefreshRate = 16;
   final Duration timerDuration;
   final void Function() cancelTimer;
   final bool isTimer;
@@ -199,6 +199,9 @@ class TimerPageState extends State<TimerPage> with WidgetsBindingObserver {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          widget.isTimer
+              ? const Text(style: TextStyle(fontSize: 55), "Timer")
+              : const Text(style: TextStyle(fontSize: 55), "Stopwatch"),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -331,8 +334,8 @@ class MinutesAndSecondsState extends State<MinutesAndSeconds> {
   void initState() {
     onTick(widget.defaultTime);
 
-    streamSubMinutesAndSeconds = widget.timeStream.listen(onDone: () => print,
-        (ElapsedTime elapsedTime) {
+    streamSubMinutesAndSeconds =
+        widget.timeStream.listen((ElapsedTime elapsedTime) {
       onTick(elapsedTime);
     });
     super.initState();
@@ -380,7 +383,7 @@ class Hundreds extends StatefulWidget {
 
 class HundredsState extends State<Hundreds> {
   HundredsState();
-  late StreamSubscription<ElapsedTime> StreamSubHundreds;
+  late StreamSubscription<ElapsedTime> streamSubHundreds;
 
   int hundreds = 0;
 
@@ -388,8 +391,7 @@ class HundredsState extends State<Hundreds> {
   void initState() {
     onTick(widget.defaultTime);
 
-    StreamSubHundreds = widget.timeStream.listen(onDone: () => print("DIOCAN"),
-        (ElapsedTime elapsedTime) {
+    streamSubHundreds = widget.timeStream.listen((ElapsedTime elapsedTime) {
       onTick(elapsedTime);
     });
     super.initState();
@@ -405,7 +407,7 @@ class HundredsState extends State<Hundreds> {
 
   @override
   void dispose() {
-    StreamSubHundreds.cancel();
+    streamSubHundreds.cancel();
     super.dispose();
   }
 

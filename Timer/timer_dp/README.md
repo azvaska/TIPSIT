@@ -22,8 +22,12 @@ class ElapsedTime {
   });
 }
 ```
-That will then be rendered by two different widgets for performance reasons this is achived tanks to the widget ```RepaintBoundary```.
+That will then be rendered by two different widgets for performance reasons this is achived tanks to the widget ```RepaintBoundary```, one for hours minutes and seconds the other one the milliseconds.
 <br>
+```dart
+  static const int timerMillisecondsRefreshRate = 16;
+```
+the tick is repeted every 16ms since flutter is optimized for max 60fps
 The streams are implemented like this:
 ```dart
   Stream<int> timedCounter(int interval, bool isTimer) {
@@ -87,9 +91,9 @@ The streams are implemented like this:
         onCancel: stopTimerPage);
     return controller.stream;
   }
-  ```
+```
 
-
+To transform the tick into an object that will then be then showed in the ui
 ```dart
   Stream<ElapsedTime> convertedTimeStream(Stream<int> timedCounter) {
     subscriptionTimerMs = timedCounter.listen((int ms) {
@@ -112,65 +116,37 @@ The streams are implemented like this:
   }
 ```
 
-
-
-```dart
-void callback(Timer timer) {
-  if (milliseconds != widget.dependencies.stopwatch.elapsedMilliseconds) {
-    milliseconds = widget.dependencies.stopwatch.elapsedMilliseconds;
-    final int hundreds = (milliseconds / 10).truncate();
-    final int seconds = (hundreds / 100).truncate();
-    final int minutes = (seconds / 60).truncate();
-    final ElapsedTime elapsedTime = ElapsedTime(
-      hundreds: hundreds,
-      seconds: seconds,
-      minutes: minutes,
-    );
-    for (final listener in widget.dependencies.timerListeners) {
-      listener(elapsedTime);
-    }
-  }
-  }
-```
-The widgets that will show the value they subscribe to the ``` Timer.periodic()``` is like this:
+The widgets that will show the value they subscribe to the stream that generates the ```ElapsedTime``` is like this:
 ```dart
 @override
-void initState() {
-  widget.dependencies.timerListeners.add(onTick);
-  super.initState();
-}
+  void initState() {
+    onTick(widget.defaultTime);
+
+    streamSubMinutesAndSeconds = widget.timeStream.listen(
+        (ElapsedTime elapsedTime) {
+      onTick(elapsedTime);
+    });
+    super.initState();
+  }
 ```
 The function onTick for example in the widgets that manages the minutes and seconds is like this:
 ```dart
-void onTick(ElapsedTime elapsed) {
-  if (elapsed.minutes != minutes || elapsed.seconds != seconds) {
-    setState(() {
-      minutes = elapsed.minutes;
-      seconds = elapsed.seconds;
-    });
+  void onTick(ElapsedTime elapsed) {
+    if (elapsed.minutes != minutes ||
+        elapsed.seconds != seconds ||
+        elapsed.hours != hours) {
+      setState(() {
+        minutes = elapsed.minutes;
+        seconds = elapsed.seconds;
+        hours = elapsed.hours;
+      });
+    }
   }
-}
 ```
 
-### BestTime
-Thanks to the class ```SharedPreferences``` we can save the best time easily and retrieve it back.
-```dart
-int bestTime = min(prefs.getIn(Utils.bestTimeKey) ?? Utils.maxInt,
-    timerController.stopwatch.elapsedMilliseconds);
-Future.delayed(Duration.zero, () async {
-  await prefs.setInt(Utils.bestTimeKey, bestTime);
-});
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-
-default timer -> 10-15-20m
-suoneria quando e' finito
-
+# References
+[StreamController](https://api.dart.dev/stable/2.18.4/dart-async/StreamController-class.html)
+<br>
+[Timer](https://api.dart.dev/stable/2.18.4/dart-async/Timer-class.html)
+<br>
+[flutterRingtonePlayer](https://pub.dev/packages/flutter_ringtone_player)

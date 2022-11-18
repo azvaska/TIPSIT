@@ -28,10 +28,12 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
         selectedFontSize: 15,
-        selectedIconTheme:
-            const IconThemeData(color: Color.fromARGB(255, 0, 0, 0), size: 30),
-        selectedItemColor: const Color.fromARGB(255, 0, 0, 0),
+        selectedIconTheme: const IconThemeData(color: Colors.white, size: 30),
+        selectedItemColor: Colors.white,
+        // unselectedIconTheme: const IconThemeData(color: Colors.white, size: 15),
+        unselectedLabelStyle: const TextStyle(color: Colors.white),
         backgroundColor: const Color.fromARGB(255, 37, 76, 182),
+        unselectedItemColor: Colors.grey[600],
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
         currentIndex: _currentScreenIndex,
         onTap: (int index) {
@@ -41,11 +43,13 @@ class _HomePageState extends State<HomePage> {
         },
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.hourglass_bottom_sharp),
+            backgroundColor: Colors.white,
+            icon: Icon(color: Colors.white, Icons.hourglass_bottom_sharp),
             label: 'Timer',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.timer),
+            backgroundColor: Colors.white,
+            icon: Icon(color: Colors.white, Icons.timer),
             label: 'Stopwach',
           ),
         ],
