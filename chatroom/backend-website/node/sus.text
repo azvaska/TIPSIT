@@ -1,0 +1,12 @@
+node-node2-1  | I[2022-12-04|14:02:48.758] Version info                                 module=main software=0.31.5 block=10 p2p=7
+node-node2-1  | I[2022-12-04|14:02:49.225] Starting Node                                module=main impl=Node
+node-node2-1  | E[2022-12-04|14:02:49.226] Can't add peer's address to addrbook         module=p2p err="Cannot add non-routable address add5b74d8b27b27968372191dfa0aa09f8e53519@172.18.5.11:30092"
+node-node2-1  | I[2022-12-04|14:02:49.384] Started node                                 module=main nodeInfo="{ProtocolVersion:{P2P:7 Block:10 App:0} ID_:84d62b41b7bd5b2ef7d3cb1a077d54c4dae1f2c1 ListenAddr:tcp://0.0.0.0:30094 Network:test-chain-9Zvbqz Version:0.31.5 Channels:4020212223303800 Moniker:085f357eb0c6 Other:{TxIndex:on RPCAddress:tcp://0.0.0.0:46521}}"
+node-node2-1  | E[2022-12-04|14:02:49.384] Couldn't connect to any seeds                module=p2p 
+node-node2-1  | E[2022-12-04|14:02:49.945] Error dialing peer                           module=p2p err="auth failure: conn.ID (e7190f2b4bae72646f227f434adebed3dd89f7ef) dialed ID (add5b74d8b27b27968372191dfa0aa09f8e53519) mismatch"
+node-node1-1  | I[2022-12-04|14:02:48.639] Version info                                 module=main software=0.31.5 block=10 p2p=7
+node-node1-1  | I[2022-12-04|14:02:49.225] Starting Node                                module=main impl=Node
+node-node1-1  | E[2022-12-04|14:02:49.226] Can't add peer's address to addrbook         module=p2p err="Cannot add non-routable address f2071593844aafa527682605112a1b2e9d769cb5@172.18.5.10:30094"
+node-node1-1  | I[2022-12-04|14:02:49.434] Started node                                 module=main nodeInfo="{ProtocolVersion:{P2P:7 Block:10 App:0} ID_:e7190f2b4bae72646f227f434adebed3dd89f7ef ListenAddr:tcp://0.0.0.0:30092 Network:test-chain-9Zvbqz Version:0.31.5 Channels:4020212223303800 Moniker:44a7f46a3105 Other:{TxIndex:on RPCAddress:tcp://0.0.0.0:36351}}"
+node-node1-1  | E[2022-12-04|14:02:49.434] Couldn't connect to any seeds                module=p2p 
+node-node1-1  | E[2022-12-04|14:02:49.795] Error dialing peer                           module=p2p err="auth failure: conn.ID (84d62b41b7bd5b2ef7d3cb1a077d54c4dae1f2c1) dialed ID (f2071593844aafa527682605112a1b2e9d769cb5) mismatch"

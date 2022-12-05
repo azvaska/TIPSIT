@@ -1,0 +1,33 @@
+services:
+  node1:
+    build: ./node1/
+    command: node node1.js
+    volumes:
+      - ./node1:/usr/src/app
+    ports:
+      - "30090:30090"
+      - "30092:30092"
+    networks:
+      blockchain:
+        ipv4_address: 172.18.5.11
+  node2:
+    build: ./node2/
+    command: node node2.js
+    depends_on:
+      - node1
+    volumes:
+      - ./node2:/usr/src/app
+    ports:
+      - "30093:30093"
+      - "30094:30094"
+    networks:
+      blockchain:
+        ipv4_address: 172.18.5.10
+networks:
+  blockchain:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.5.0/24
+          gateway: 172.18.5.1
