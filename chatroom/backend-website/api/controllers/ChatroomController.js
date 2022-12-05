@@ -1,19 +1,73 @@
 const User = require('../models/User.js');
 const axios = require('axios');
+const Room = require('../models/Room');
 const qs = require('qs');
+const uuid = require('uuid')
 import forge from "node-forge"
+
+
 const createRoom = (req, res) => {
     let name = req.body.name;
     let password = req.body.password;
+    let chat_id = uuid.v4();
     const md = forge.md.sha256.create();
     md.update(password);
+    md.update(" "+name);
     const seed = md.digest().toHex();
-    const prng = forge.random.createInstance()
+    const prng = forge.random.createInstance();
     prng.seedFileSync = () => seed
     // Deterministic key generation
     const { privateKey, publicKey } = forge.pki.rsa.generateKeyPair({ bits: 4096, prng })
+
+    let room = new Room({
+        chatid: chat_id,
+        name: req.body.email,
+        password: hashedPass,
+        userId: generateUserId(),
+        rsa_pubblic: publicKey,
+        rsa_private: privateKey,
+        block: []
+    })
+
+    room.save()
+        .then(room => {
+            res.json({
+                message: 'room Added Successfully!'
+            })
+        })
+        .catch(err => {
+            res.json({
+                message: 'An error occurred!',
+                error: err.message
+            })
+        })
+
+    console.log(privateKey)
+    res.send({privateKey: privateKey, publicKey: publicKey,chatId:chat_id})
 }
 
+
+const getRoom = (req, res) => {
+    let name = req.body.name;
+    let password = req.body.password;
+    const md = forge.md.sha512.create();
+    md.update(password);
+    md.update(" "+name);
+    const seed = md.digest().toHex();
+    if (password !== "test"){
+        res.statusMessage = "A room with that password or name does not exist.";
+        return  res.status(400);
+    }
+    const prng = forge.random.createInstance()
+    prng.seedFileSync = () => seed
+    chat_id="3334433"
+    // Deterministic key generation
+    const { privateKey, publicKey } = forge.pki.rsa.generateKeyPair({ bits: 4096, prng })
+    console.log(privateKey)
+
+    res.send({privateKey: privateKey, publicKey: publicKey,chatId:chat_id})
+}
+/*
 const getBlockNumb = (req, res, next) => {
     let userId = req.body.userId;
     
@@ -27,9 +81,10 @@ const getBlockNumb = (req, res, next) => {
             console.error(err);
         })
 }
-
+*/
 const getMessages = (req, res, next) => {
     let userId = req.body.userId;
+    let roomId = req.body.roomId;
     let blocks;
     let messages = [];
     let username;
