@@ -33,8 +33,7 @@ const register = (req, res, next) => {
                     })
                 })
         });
-    })
-}
+    };
 
 const login = (req, res, next) => {
     let username = req.body.username;

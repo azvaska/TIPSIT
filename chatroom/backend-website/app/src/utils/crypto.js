@@ -1,4 +1,3 @@
-
 function hexStringToArrayBuffer(hexString) {
   // remove the leading 0x
   hexString = hexString.replace(/^0x/, '');
@@ -53,13 +52,15 @@ export async function encrypt(ivStr, plaintext, pwHash) {
    * @returns {Promise<string>}
    */
   export async function decrypt(ivStr, ciphertext, pwHash) {
+    pwHash=hexStringToArrayBuffer(pwHash);
+
     const iv = new Uint8Array(Array.from(ivStr).map(ch => ch.charCodeAt(0)));
     // specify algorithm to use
     const alg = { name: 'AES-GCM', iv: iv };
     // generate key from pw
     const key = await crypto.subtle.importKey('raw', pwHash, alg, false, ['decrypt']);
     // decode base64 ciphertext
-    const ctStr = atob(ciphertext).slice(12);
+    const ctStr = atob(ciphertext);
     // ciphertext as Uint8Array
     const ctUint8 = new Uint8Array(Array.from(ctStr).map(ch => ch.charCodeAt(0)));
     // note: why doesn't ctUint8 = new TextEncoder().encode(ctStr) work?

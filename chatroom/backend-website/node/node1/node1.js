@@ -10,16 +10,16 @@ let app = lotion({
   logTendermint: true,
   // keyPath: '/mnt/cestino/backup_robba/ProgrammiSviluppo/TIPSIT/chatroom/blockchain-chat/node/node1/config/priv_validator_key.json',
   keyPath: '/usr/src/app/static_config/priv_validator_key.json',
-  peers: ["e54e41945e037994795f0f67b47835063ed911e9@172.18.5.10:30094"],
+  peers: ["16eab664372ed17a72177cd698371dec67613861@172.18.5.10:30094"],
   createEmptyBlocks: false
 })
 app.home = '/usr/src/app/'
 app.use((state, tx, chainInfo) => {
-  if (typeof tx.senderId === 'string' && typeof tx.content === 'string') {
+  if (typeof tx.userId === 'string') {
     state.messages.push({
       _id: tx._id,
-      senderId: tx.senderId,
-      destinationId: tx.destinationId,
+      userId: tx.userId,
+      roomId: tx.roomId,
       content: tx.content,
       timestamp: tx.timestamp,
     })

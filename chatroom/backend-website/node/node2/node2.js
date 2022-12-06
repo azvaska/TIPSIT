@@ -8,15 +8,15 @@ let app = lotion({
   p2pPort: 30094,
   logTendermint: true,
   keyPath: '/usr/src/app/static_config/priv_validator_key.json',
-  peers: ['f1ec6aa15685b554b2d4dfd6dd7d8deb6d5946bd@172.18.5.11:30092'],
+  peers: ['ff12b6e5e47b47002494149a963dd10f1e92a4c8@172.18.5.11:30092'],
 })
 app.home = '/usr/src/app/'
 app.use((state, tx, chainInfo) => {
-  if (typeof tx.senderId === 'string' && typeof tx.content === 'string') {
+  if (typeof tx.userId === 'string') {
     state.messages.push({
       _id: tx._id,
-      senderId: tx.senderId,
-      destinationId: tx.destinationId,
+      userId: tx.userId,
+      roomId: tx.roomId,
       content: tx.content,
       timestamp: tx.timestamp,
     })

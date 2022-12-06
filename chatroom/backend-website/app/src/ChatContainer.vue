@@ -30,7 +30,7 @@
 
 import ChatWindow from 'vue-advanced-chat'
 import 'vue-advanced-chat/dist/vue-advanced-chat.css'
-import {encrypt,fromBinary} from "./utils/crypto"
+import {decrypt,encrypt,fromBinary} from "./utils/crypto"
 const axios = require('axios').default;
 const qs = require('qs');
 
@@ -122,11 +122,22 @@ export default {
 	},
 
 	mounted() {
-		this.$soketio.on('new-message', (data) => {
-			console.log(data)
-			this.fetchRooms();
+		this.$soketio.on('new-message', async (data) => {
+			let room=null;
+			for (let i = 0; i < this.rooms.length; i++) {
+				if (this.rooms[i].roomId == data.roomId) {
+					room=this.rooms[i]
+				}
+			}
+			console.log(await decrypt(room.iv,data.content,room.password))
+			console.log("New message")
+			this.messages.push({
+				roomId: data.roomId,
+				userId: data.userId,
+				content: await decrypt(room.iv,data.content,room.password),
+				createdAt: data.createdAt
+			})
 		})
-
 		this.fetchRooms()
 		//await checkNewMsg();
 	},
@@ -437,8 +448,8 @@ export default {
 				}
 			}
 			let message = {
-				sender_id: this.currentUserId,
-				roomid:roomId,
+				userId: this.currentUserId,
+				roomId:roomId,
 				content: await encrypt(room.iv,content,room.password),
 				timestamp: Math.floor(new Date().getTime() / 1000)
 			}
@@ -447,14 +458,14 @@ export default {
 				files = null;
 			}
 			this.$soketio.emit('message', message);
-			axios.post("http://localhost:3080/api/send", {
-				senderId: message.sender_id,
-				content: message.content,
-				destinationId: roomId
-			})
-				.then((response) => {
-					console.log(response.data.message);
-				})
+			// axios.post("http://localhost:3080/api/send", {
+			// 	senderId: message.sender_id,
+			// 	content: message.content,
+			// 	destinationId: roomId
+			// })
+			// 	.then((response) => {
+			// 		console.log(response.data.message);
+			// 	})
 
 			let date = new Date(message.timestamp * 1000)
 			room.lastMessage.content = message.content;
@@ -519,7 +530,8 @@ export default {
 						//)
 					}
 					console.log(this.rooms);
-					this.$soketio.emit('join', {room:room.roomId,userId:userId});
+					console.log({room:room.roomId,userId:userId})
+					this.$soketio.emit('join', {roomId:room.roomId,userId:userId});
 					this.rooms.push(room);
 					//this.listenLastMessage(room);
 					this.roomsLoadedCount += 1;
@@ -527,7 +539,10 @@ export default {
 
 					this.roomsLoaded = true
 				})
-				.catch(function (error) {
+				.catch((error) =>{
+					this.ErrorCreateRoom=error.response.data.message
+					this.addRoom()
+
 					console.log(error);
 				})
 

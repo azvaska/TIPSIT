@@ -34,7 +34,6 @@ const createRoom = (req, res) => {
                         return 0;
 
                     } else {
-                        console.log(crypto)
                         const md = crypto.createHash('sha256');
                         md.update(password + " " + name_room);
                         const password_derivative = md.digest('hex');
@@ -43,7 +42,6 @@ const createRoom = (req, res) => {
                         let iv_aes = Array.from(iv).map(b => String.fromCharCode(b)).join('');
                         // Deterministic key generation
                         iv_aes = b64EncodeUnicode(iv_aes)
-                        console.log("generation")
                         let room = new Room({
                             roomid: chat_id,
                             name: name_room,
