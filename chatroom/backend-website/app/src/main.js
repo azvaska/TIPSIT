@@ -7,8 +7,8 @@ import './registerServiceWorker'
 import io from 'socket.io-client';
 
 const app =  createApp(App);
-
-app.config.globalProperties.$soketio = io('localhost:3000');
+app.config.globalProperties.$Wsaddress = 'localhost:3000';
+app.config.globalProperties.$soketio = io(app.config.globalProperties.$Wsaddress);
 app.use(router).mount('#app')
 
 

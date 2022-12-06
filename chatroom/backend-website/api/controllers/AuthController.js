@@ -12,36 +12,12 @@ const register = (req, res, next) => {
             return;
         }
 
-        const { generateKeyPair } = require('crypto');
-        generateKeyPair('rsa', {
-            modulusLength: 4096,
-            publicKeyEncoding: {
-                type: 'spki',
-                format: 'pem'
-            },
-            privateKeyEncoding: {
-                type: 'pkcs8',
-                format: 'pem',
-                cipher: 'aes-256-cbc',
-                passphrase: req.body.password
-            }
-
-        }, (err, publicKey, privateKey) => {
-            if (err) {
-                console.log(err);
-                res.json({
-                    error: err
-                });
-                return;
-            }
-
+        
             let user = new User({
                 user: req.body.user,
                 email: req.body.email,
                 password: hashedPass,
                 userId: generateUserId(),
-                rsa_pubblic: publicKey,
-                rsa_private: privateKey,
                 block: []
             })
 

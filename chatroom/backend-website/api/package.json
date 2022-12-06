@@ -22,8 +22,10 @@
   "dependencies": {
     "@types/node": "^10.5.2",
     "abci": "^5.0.1",
+    "argon2": "^0.30.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "crypto-aes-gcm": "^1.1.0",
     "deterministic-json": "^1.0.5",
     "discovery-channel": "^5.5.1",
     "express": "^4.17.3",
@@ -42,6 +44,7 @@
     "tendermint": "^4.0.2",
     "tendermint-node": "5.1.5",
     "uuid": "^8.3.2",
-    "varstruct": "^6.1.2"
+    "varstruct": "^6.1.2",
+    "vue-cryptojs": "^2.3.1"
   }
 }

@@ -10,7 +10,7 @@ let app = lotion({
   logTendermint: true,
   // keyPath: '/mnt/cestino/backup_robba/ProgrammiSviluppo/TIPSIT/chatroom/blockchain-chat/node/node1/config/priv_validator_key.json',
   keyPath: '/usr/src/app/static_config/priv_validator_key.json',
-  peers: ["46f78031e132f4ddfd2e859fab4be9eee65b61fd@172.18.5.10:30094"],
+  peers: ["e54e41945e037994795f0f67b47835063ed911e9@172.18.5.10:30094"],
   createEmptyBlocks: false
 })
 app.home = '/usr/src/app/'

@@ -5,19 +5,22 @@ const RoomSchema = new Schema({
     roomid: {
         type: String,
         unique: true,
+        required:true
     },
     name: {
         type: String,
         unique: true,
+        required:true
+    },
+    owner_userId:{
+        type: String
     },
     password:{
         type: String,
+        required:true
     },
-    rsa_pubblic: {
-        type: Buffer
-    },
-    rsa_private: {
-        type: Buffer
+    iv: {
+        type: String
     },
     block: {
         type: Array

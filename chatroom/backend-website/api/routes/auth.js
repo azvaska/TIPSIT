@@ -19,7 +19,7 @@ router.post('/status', MsgController.status);
 router.post('/send', MsgController.send);
 
 // chat
-router.post('/createRoom', ChatroomController.createRoom);
+router.post('/create-room', ChatroomController.createRoom);
 router.post('/getMessages', UserController.getMessages);
 router.post('/getBlockNumb', UserController.getBlockNumb);
 

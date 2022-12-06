@@ -8,7 +8,7 @@ let app = lotion({
   p2pPort: 30094,
   logTendermint: true,
   keyPath: '/usr/src/app/static_config/priv_validator_key.json',
-  peers: ['d17fa25484386173fcaa09f75fc9a00e38212a9c@172.18.5.11:30092'],
+  peers: ['f1ec6aa15685b554b2d4dfd6dd7d8deb6d5946bd@172.18.5.11:30092'],
 })
 app.home = '/usr/src/app/'
 app.use((state, tx, chainInfo) => {
