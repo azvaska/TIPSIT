@@ -1,6 +1,6 @@
 <template>
 	<div class="window-container" :class="{ 'window-mobile': isDevice }">
-		<div v-if="ErrorCreateRoom">Error: {{ ErrorCreateRoom }}</div>
+		<div v-if="ErrorRoom">Error: {{ ErrorRoom }}</div>
 		<form v-if="addNewRoom" @submit.prevent="createRoom">
 			<input v-model="RoomName" type="text" placeholder="Room name" />
 			<input v-model="PasswordNewRoom" type="Password" placeholder="Password of the room" />
@@ -8,14 +8,16 @@
 			<button type="submit" :disabled="(disableForm || !RoomName || !PasswordNewRoom)">
 				Create Room
 			</button>
+			<button @click="(joinRoom = true)" type="submit" :disabled="(disableForm || !RoomName || !PasswordNewRoom)">
+				Join Room
+			</button>
 			<button class="button-cancel" @click="addNewRoom = false">Cancel</button>
 		</form>
 		<chat-window :height="screenHeight" :theme="theme" :styles="styles" :current-user-id="currentUserId"
 			:room-id="roomId" :rooms="loadedRooms" :loading-rooms="loadingRooms" :messages="messages"
 			:messages-loaded="messagesLoaded" :rooms-loaded="roomsLoaded" :room-actions="roomActions"
 			:menu-actions="menuActions" :room-message="roomMessage" :templates-text="templatesText"
-			@fetch-more-rooms="fetchMoreRooms" @fetch-messages="fetchMessages" @send-message="sendMessage"
-			@open-file="openFile" @open-user-tag="openUserTag" @add-room="addRoom"
+			@fetch-messages="fetchMessages" @send-message="sendMessage" @add-room="addRoom"
 			@room-action-handler="menuActionHandler" @menu-action-handler="menuActionHandler">
 			<!-- <template #emoji-picker="{ emojiOpened, addEmoji }">
 				<button @click="addEmoji({ unicode: '😁' })">
@@ -30,7 +32,7 @@
 
 import ChatWindow from 'vue-advanced-chat'
 import 'vue-advanced-chat/dist/vue-advanced-chat.css'
-import {decrypt,encrypt,fromBinary} from "./utils/crypto"
+import { decrypt, encrypt, fromBinary } from "./utils/crypto"
 const axios = require('axios').default;
 const qs = require('qs');
 
@@ -50,6 +52,7 @@ export default {
 			roomsPerPage: 15,
 			rooms: [],
 			roomId: '',
+			joinRoom: false,
 			startRooms: null,
 			endRooms: null,
 			roomsLoaded: false,
@@ -71,12 +74,12 @@ export default {
 			addNewRoom: null,
 			RoomName: '',
 			PasswordNewRoom: '',
-			ErrorCreateRoom: '',
+			ErrorRoom: '',
 			inviteRoomId: null,
 			invitedUsername: '',
 			removeRoomId: null,
-			ivStr:'',
-			pwHash:'',
+			ivStr: '',
+			pwHash: '',
 			removeUserId: '',
 			removeUsers: [],
 			roomActions: [
@@ -123,20 +126,22 @@ export default {
 
 	mounted() {
 		this.$soketio.on('new-message', async (data) => {
-			let room=null;
+			let room = null;
 			for (let i = 0; i < this.rooms.length; i++) {
 				if (this.rooms[i].roomId == data.roomId) {
-					room=this.rooms[i]
+					room = this.rooms[i]
 				}
 			}
+			console.log(this.rooms)
+			console.log(data)
 			let message = {
-				_id:data._id,
+				_id: data._id,
 				roomId: data.roomId,
 				senderId: data.userId,
-				content: await decrypt(room.iv,data.content,room.password),
-				timestamp: data.timestamp 	
+				content: await decrypt(room.iv, data.content, room.password),
+				timestamp: data.timestamp
 			};
-			console.log(await decrypt(room.iv,data.content,room.password))
+			console.log(await decrypt(room.iv, data.content, room.password))
 			console.log("New message")
 			const formattedMessage = this.formatMessage(room, message)
 			this.messages.push(formattedMessage);
@@ -194,24 +199,32 @@ export default {
 		fetchRooms() {
 
 			this.resetRooms()
-			this.fetchMoreRooms()
 			this.loadingRooms = false
 		},
 
-		async fetchMoreRooms() {
-			console.log("fetching more rooms...");
+		async getRoom() {
+			console.log("joining room");
 
-			if (this.endRooms && !this.startRooms) {
-				this.roomsLoaded = true
-				return
-			}
+			// if (this.endRooms && !this.startRooms) {
+			// 	this.roomsLoaded = true
+			// 	return
+			// }
 
 			let tempMsg = [];
 
-			axios.post("http://localhost:3080/api/getMessages", {
+			axios.post("http://localhost:3080/api/get-room", {
+				name: this.RoomName,
+				password: this.PasswordNewRoom,
 				userId: this.currentUserId,
 			}).then(response => {
-				response.data.messages.forEach(msg => {
+				console.log(response)
+				
+				response.data.messages.forEach( async msg => {
+					msg.senderId= msg.userId;
+					console.log(fromBinary(response.data.iv))
+					console.log(msg.content)
+					console.log(msg)
+					msg.content = await decrypt(fromBinary(response.data.iv), msg.content, response.data.password);
 					tempMsg.push(msg)
 				})
 				this.fetchedMessages = this.fetchedMessages.concat(tempMsg);
@@ -221,7 +234,6 @@ export default {
 				// creo le stanze 
 				// TODO forse mettere l'username diretto 
 
-				let uu = [];
 				// this.fetchedMessages.forEach(msg => {
 				// 	let userId = msg.userId;
 				// 	let destinationId = msg.destinationId;
@@ -234,111 +246,45 @@ export default {
 				// 		uu.push(userId);
 				// 	}
 				// })
+				let room = {};
 
-				uu.forEach(id => {
-					let room = {};
+				room.roomId = response.data.chatId;
+				room.roomName = this.RoomName;
+					room.timestamp = `${new Date().getHours()}:${new Date().getMinutes()}`;
+				room.users = [						{
+							_id: "sus",
+							username: "giocn"
+						}];
 
-					room.roomId = id;
-					room.roomName = id;
+				room.avatar = 'https://www.meme-arsenal.com/memes/b6a18f0ffd345b22cd219ef0e73ea5fe.jpg';
+				room.index = 0;
+				room.iv = fromBinary(response.data.iv)
+				room.password = response.data.password
+				room.lastMessage = {
+					height: 0,
+					content: 'Stanza fetchata!',
+					timestamp: `${new Date().getHours()}:${new Date().getMinutes()}`
+				}
+				this.roomsLoadedCount += 1;
 
-					room.users = [
-						{
-							_id: id,
-							username: id
-						}
-					];
+				roomList.push(room);
 
-					room.avatar = 'https://www.meme-arsenal.com/memes/b6a18f0ffd345b22cd219ef0e73ea5fe.jpg';
-					room.index = 0;
-					room.lastMessage = {
-						height: 0,
-						content: 'Stanza fetchata!',
-						timestamp: `${new Date().getHours()}:${new Date().getMinutes()}`
-					}
-					roomList.push(room);
-
-					//this.listenLastMessage(room);
-					this.roomsLoadedCount += 1;
-
-
-				})
+				//this.listenLastMessage(room);
 				this.rooms = this.rooms.concat(roomList);
 				this.roomsLoaded = true;
-				console.log(this.rooms);
+				console.log(room);
 				this.loadingRooms = false
 
 				if (!this.rooms.length) {
 					this.loadingRooms = false
 					this.roomsLoadedCount = 0
 				}
+				this.$soketio.emit('join', { roomId: room.roomId, userId: this.currentUserId });
+
+				this.fetchMessages({ room: room})
 			});
-			/*
-			this.listenUsersOnlineStatus(formattedRooms)
-			this.listenRooms(query)
-			// setTimeout(() => console.log('TOTAL', this.dbRequestCount), 2000)
-			*/
 		},
 
-		/*
-		listenLastMessage(room) {
-			const listener = firestoreService.listenLastMessage(
-				room.roomId,
-				messages => {
-	
-					messages.forEach(message => {
-						const lastMessage = this.formatLastMessage(message, room)
-						const roomIndex = this.rooms.findIndex(
-							r => room.roomId === r.roomId
-						)
-						this.rooms[roomIndex].lastMessage = lastMessage
-						this.rooms = [...this.rooms]
-					})
-					if (this.loadingLastMessageByRoom < this.rooms.length) {
-						this.loadingLastMessageByRoom++
-	
-						if (this.loadingLastMessageByRoom === this.rooms.length) {
-							this.loadingRooms = false
-							this.roomsLoadedCount = this.rooms.length
-						}
-					}
-				}
-			)
-	
-			this.roomsListeners.push(listener)
-		},
-	
-		formatLastMessage(message, room) {
-			if (!message.timestamp) return
-	
-			let content = message.content
-			if (message.files?.length) {
-				const file = message.files[0]
-				content = `${file.name}.${file.extension || file.type}`
-			}
-	
-			const username =
-				message.sender_id !== this.currentUserId
-					? room.users.find(user => message.sender_id === user._id)?.username
-					: ''
-	
-			return {
-				...message,
-				...{
-					content,
-					timestamp: formatTimestamp(
-						new Date(message.timestamp.seconds * 1000),
-						message.timestamp
-					),
-					username: username,
-					distributed: true,
-					seen: message.sender_id === this.currentUserId ? message.seen : null,
-					new:
-						message.sender_id !== this.currentUserId &&
-						(!message.seen || !message.seen[this.currentUserId])
-				}
-			}
-		},
-		*/
 		fetchMessages({ room, options = {} }) {
 			// TODO carico solo i messaggi della chat che ho selezionato siummm
 			if (options.reset) {
@@ -348,32 +294,21 @@ export default {
 
 
 			// maybe cancella
-			if (this.previousLastLoadedMessage && !this.lastLoadedMessage) {
-				this.messagesLoaded = true
-				return
-			}
+			// if (this.previousLastLoadedMessage && !this.lastLoadedMessage) {
+			// 	this.messagesLoaded = true
+			// 	return
+			// }
 
 			this.selectedRoom = room.roomId
 
 			// prendo i messaggi solo di quella stanza
-			let temp = [];
-			this.fetchedMessages.forEach(msg => {
-				let userId = msg.userId;
-				let destinationId = msg.destinationId;
-
-				let userId;
-				if (userId == this.currentUserId) userId = destinationId;
-				else userId = userId;
-
-				if (userId == room.roomId) {
-					temp.push(msg);
-				}
-			})
 
 			if (options.reset) this.messages = []
+			console.log(this.fetchedMessages)
 
-			temp.forEach(message => {
+			this.fetchedMessages.forEach(message => {
 				const formattedMessage = this.formatMessage(room, message)
+				console.log("MESSAGGIO FORMATTATO" + formattedMessage)
 				this.messages.unshift(formattedMessage);
 			})
 
@@ -385,44 +320,6 @@ export default {
 
 			//this.listenMessages(room)
 		},
-		/*
-		listenMessages(room) {
-			const listener = firestoreService.listenMessages(
-				room.roomId,
-				this.lastLoadedMessage,
-				this.previousLastLoadedMessage,
-				messages => {
-					messages.forEach(message => {
-						const formattedMessage = this.formatMessage(room, message)
-						const messageIndex = this.messages.findIndex(
-							m => m._id === message.id
-						)
-	
-						if (messageIndex === -1) {
-							this.messages = this.messages.concat([formattedMessage])
-						} else {
-							this.messages[messageIndex] = formattedMessage
-							this.messages = [...this.messages]
-						}
-	
-						this.markMessagesSeen(room, message)
-					})
-				}
-			)
-			this.listeners.push(listener)
-		},
-	
-		markMessagesSeen(room, message) {
-			if (
-				message.sender_id !== this.currentUserId &&
-				(!message.seen || !message.seen[this.currentUserId])
-			) {
-				firestoreService.updateMessage(room.roomId, message.id, {
-					[`seen.${this.currentUserId}`]: new Date()
-				})
-			}
-		},
-		*/
 		formatMessage(room, message) {
 			let date = new Date(message.timestamp * 1000);
 			console.log("dATA MSG" + date)
@@ -445,16 +342,16 @@ export default {
 
 		async sendMessage({ content, roomId, files, replyMessage }) {
 			console.log(replyMessage);
-			let room={}
+			let room = {}
 			for (let i = 0; i < this.rooms.length; i++) {
 				if (this.rooms[i].roomId == roomId) {
-					room=this.rooms[i]
+					room = this.rooms[i]
 				}
 			}
 			let message = {
 				userId: this.currentUserId,
-				roomId:roomId,
-				content: await encrypt(room.iv,content,room.password),
+				roomId: roomId,
+				content: await encrypt(room.iv, content, room.password),
 				timestamp: Math.floor(new Date().getTime() / 1000)
 			}
 			console.log(message)
@@ -475,7 +372,7 @@ export default {
 			room.lastMessage.content = message.content;
 			room.lastMessage.timestamp = `${date.getHours()}:${date.getMinutes()}`;
 		},
-		
+
 		menuActionHandler({ action, roomId }) {
 			switch (action.name) {
 				case 'inviteUser':
@@ -486,7 +383,7 @@ export default {
 					return this.deleteRoom(roomId)
 			}
 		},
-		
+
 		addRoom() {
 			console.log("addRoom");
 			this.resetForms();
@@ -495,13 +392,20 @@ export default {
 
 		async createRoom() {
 			console.log("createRoom");
-			this.disableForm = true
+			console.log(this.joinRoom)
+			if (this.joinRoom) {
+				this.disableForm = true
+				this.joinRoom = false;
+				this.addNewRoom = false;
+				this.getRoom();
+				return;
+			}
 
 			axios.post('http://localhost:3080/api/create-room', qs.stringify({
 				userId: this.currentUserId,
 				name: this.RoomName,
 				password: this.PasswordNewRoom,
-				
+
 			}))
 				.then((res) => {
 					console.log(res.data);
@@ -515,8 +419,8 @@ export default {
 					room.roomId = res.data.chatId;
 					room.roomName = this.RoomName;
 					room.timestamp = `${new Date().getHours()}:${new Date().getMinutes()}`;
-					room.iv= fromBinary(res.data.iv)
-					room.password=res.data.password
+					room.iv = fromBinary(res.data.iv)
+					room.password = res.data.password
 					room.users = [
 						{
 							_id: userId,
@@ -534,9 +438,9 @@ export default {
 						//)
 					}
 					console.log(this.rooms);
-					this.ErrorCreateRoom=""
-					console.log({room:room.roomId,userId:userId})
-					this.$soketio.emit('join', {roomId:room.roomId,userId:userId});
+					this.ErrorRoom = ""
+					console.log({ room: room.roomId, userId: userId })
+					this.$soketio.emit('join', { roomId: room.roomId, userId: userId });
 					this.rooms.push(room);
 					//this.listenLastMessage(room);
 					this.roomsLoadedCount += 1;
@@ -544,8 +448,8 @@ export default {
 
 					this.roomsLoaded = true
 				})
-				.catch((error) =>{
-					this.ErrorCreateRoom=error.response.data.message
+				.catch((error) => {
+					this.ErrorRoom = error.response.data.message
 					this.addRoom()
 
 					console.log(error);

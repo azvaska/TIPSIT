@@ -9,7 +9,7 @@ const Room = require('./models/Room');
 const AuthRoute = require('./routes/auth');
 const cors = require('cors');
 const uuid = require('uuid');
-const path_gense = "/home/awasaka/Documents/programmi/TIPSIT/chatroom/backend-website/api/genesis.json"
+const path_gense = "/mnt/cestino/backup_robba/ProgrammiSviluppo/TIPSIT/chatroom/backend-website/api/genesis.json"
 const http = require('http').Server(app);
 const io = require('socket.io')(http, {
     cors: {
@@ -27,7 +27,7 @@ io.on('connection', function (socket) {
             User.findOne({ userId: data.userId })
                 .then((user) => {
                     if (user) {
-                        Room.findOne({ roomId: data.roomId }).then((room) => {
+                        Room.findOne({ roomid: data.roomId }).then((room) => {
                             if (room) {
                                 console.log("user joined room: " + data.roomId)
                                 io.to(data.roomId).emit("JoinedRoom", `A new user has joined the room : ${user.user} `)
@@ -51,7 +51,7 @@ io.on('connection', function (socket) {
             User.findOne({ userId: data.userId })
                 .then((user) => {
                     if (user) {
-                        Room.findOne({ roomId: data.roomId }).then(async (room) => {
+                        Room.findOne({ roomid: data.roomId }).then(async (room) => {
                             if (room) {
                                 let lc = await connect(null, {
                                     nodes:
@@ -69,11 +69,13 @@ io.on('connection', function (socket) {
                                         console.log("message sent to the blockchain" + JSON.stringify(x));
                                         room.block.push(x.height)
                                         room.save()
-                                        .then(_ => {
+                                        .then(sus => {
+                                            console.log("room updated")
+                                            console.log(sus)
                                             io.to(data.roomId).emit('new-message', msg);
                                         })
                                         .catch(err => {
-                                            console.log(JSON.stringify(socket))
+                                            console.log(JSON.stringify(err))
 
                                         })
                                     })
@@ -86,11 +88,9 @@ io.on('connection', function (socket) {
     });
 });
 
-http.listen(3000, function () {
-    console.log('listening on *:3000');
-});
 
-PORT = 3080;
+
+const PORT = 3080;
 
 // db connection
 const uri = "mongodb+srv://scimmia:bicistampante9@cluster0.jrjyogj.mongodb.net/?retryWrites=true&w=majority";
@@ -111,7 +111,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 
-app.listen(PORT, () => console.log(`[INFO] Server listening on port ${PORT}`));
 
 
 
@@ -129,7 +128,6 @@ let lotionapp = require('lotion')({
 
 lotionapp.use((state, tx) => {
     console.log("new message received: " + tx);
-    // io.to(tx.roomId).emit("new-message", tx);
     state.messages.push({
         _id: tx._id,
         userId: tx.userId,
@@ -140,6 +138,10 @@ lotionapp.use((state, tx) => {
 });
 
 lotionapp.start(3000).then(async ({ GCI }) => {
+    http.listen(3000, function () {
+        console.log('listening on *:3000 for socket.io');
+    });
+    app.listen(PORT, () => console.log(`[INFO] Server listening on port ${PORT}`));
     console.log(GCI)
     console.log("Lotion started")
 })

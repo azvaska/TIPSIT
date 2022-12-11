@@ -71,7 +71,9 @@ export async function encrypt(ivStr, plaintext, pwHash) {
       // return plaintext from ArrayBuffer
       return new TextDecoder().decode(plainBuffer);
     } catch (error) {
+      console.log(error);
       throw new Error('decrypt failed');
+      
     }
   }
 

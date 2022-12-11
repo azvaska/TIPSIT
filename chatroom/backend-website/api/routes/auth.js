@@ -20,7 +20,7 @@ router.post('/send', MsgController.send);
 
 // chat
 router.post('/create-room', ChatroomController.createRoom);
-router.post('/getMessages', UserController.getMessages);
+router.post('/get-room', ChatroomController.getRoom);
 router.post('/getBlockNumb', UserController.getBlockNumb);
 
 module.exports = router;
