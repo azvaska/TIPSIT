@@ -219,18 +219,18 @@ export default {
 				// TODO forse mettere l'username diretto 
 
 				let uu = [];
-				this.fetchedMessages.forEach(msg => {
-					let senderId = msg.senderId;
-					let destinationId = msg.destinationId;
+				// this.fetchedMessages.forEach(msg => {
+				// 	let userId = msg.userId;
+				// 	let destinationId = msg.destinationId;
 
-					let userId;
-					if (senderId == this.currentUserId) userId = destinationId;
-					else userId = senderId;
+				// 	let userId;
+				// 	if (userId == this.currentUserId) userId = destinationId;
+				// 	else userId = userId;
 
-					if (uu.find(element => element == userId) == undefined) {
-						uu.push(userId);
-					}
-				})
+				// 	if (uu.find(element => element == userId) == undefined) {
+				// 		uu.push(userId);
+				// 	}
+				// })
 
 				uu.forEach(id => {
 					let room = {};
@@ -355,12 +355,12 @@ export default {
 			// prendo i messaggi solo di quella stanza
 			let temp = [];
 			this.fetchedMessages.forEach(msg => {
-				let senderId = msg.senderId;
+				let userId = msg.userId;
 				let destinationId = msg.destinationId;
 
 				let userId;
-				if (senderId == this.currentUserId) userId = destinationId;
-				else userId = senderId;
+				if (userId == this.currentUserId) userId = destinationId;
+				else userId = userId;
 
 				if (userId == room.roomId) {
 					temp.push(msg);
@@ -459,7 +459,7 @@ export default {
 			}
 			this.$soketio.emit('message', message);
 			// axios.post("http://localhost:3080/api/send", {
-			// 	senderId: message.sender_id,
+			// 	userId: message.sender_id,
 			// 	content: message.content,
 			// 	destinationId: roomId
 			// })
