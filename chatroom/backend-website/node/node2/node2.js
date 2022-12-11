@@ -1,4 +1,3 @@
-require('dotenv').config({path: ".env-node2"});
 let lotion = require('lotion')
 //ip 172.17.5.10:30092
 let app = lotion({

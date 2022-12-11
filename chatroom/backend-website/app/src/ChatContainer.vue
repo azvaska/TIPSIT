@@ -117,7 +117,7 @@ export default {
 			return this.rooms.slice(0, this.roomsLoadedCount)
 		},
 		screenHeight() {
-			return this.isDevice ? window.innerHeight + 'px' : 'calc(100vh - 80px)'
+			return this.isDevice ? window.innerHeight + 'px' : '100vh'
 		}
 	},
 
@@ -129,14 +129,17 @@ export default {
 					room=this.rooms[i]
 				}
 			}
+			let message = {
+				_id:data._id,
+				roomId: data.roomId,
+				senderId: data.userId,
+				content: await decrypt(room.iv,data.content,room.password),
+				timestamp: data.timestamp 	
+			};
 			console.log(await decrypt(room.iv,data.content,room.password))
 			console.log("New message")
-			this.messages.push({
-				roomId: data.roomId,
-				userId: data.userId,
-				content: await decrypt(room.iv,data.content,room.password),
-				createdAt: data.createdAt
-			})
+			const formattedMessage = this.formatMessage(room, message)
+			this.messages.push(formattedMessage);
 		})
 		this.fetchRooms()
 		//await checkNewMsg();
@@ -422,6 +425,7 @@ export default {
 		*/
 		formatMessage(room, message) {
 			let date = new Date(message.timestamp * 1000);
+			console.log("dATA MSG" + date)
 			const formattedMessage = {
 				...message,
 				...{
@@ -530,6 +534,7 @@ export default {
 						//)
 					}
 					console.log(this.rooms);
+					this.ErrorCreateRoom=""
 					console.log({room:room.roomId,userId:userId})
 					this.$soketio.emit('join', {roomId:room.roomId,userId:userId});
 					this.rooms.push(room);
