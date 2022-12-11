@@ -75,8 +75,9 @@ const createRoom = (req, res) => {
 
 
 const getRoom = (req, res) => {
-    let name = req.body.name;
+    let name_r = req.body.name;
     let password = req.body.password;
+    let 
     const md = forge.md.sha512.create();
     md.update(password);
     md.update(" " + name);
@@ -85,15 +86,20 @@ const getRoom = (req, res) => {
         res.statusMessage = "A room with that password or name does not exist.";
         return res.status(400);
     }
-    const prng = forge.random.createInstance()
-    prng.seedFileSync = () => seed
-    chat_id = "3334433"
-    // Deterministic key generation
-    const { privateKey, publicKey } = forge.pki.rsa.generateKeyPair({ bits: 4096, prng })
 
     console.log(privateKey)
+    Room.findOne({ name: name_r}).then(async (room) => {
+        if (room) {
+            const md = crypto.createHash('sha256');
+                        md.update(password + " " + name_room);
+                        const password_derivative = md.digest('hex');
+                        if(room.password === password_derivative)
+            res.json({
+                message: 'Found the room Successfully!'
+                , iv: iv_aes, password: room.password, chatId: chat_id,
+            })
+        }})
 
-    res.send({ privateKey: privateKey, publicKey: publicKey, chatId: chat_id })
 }
 /*
 const getBlockNumb = (req, res, next) => {
@@ -116,13 +122,13 @@ const getMessages = (req, res, next) => {
     let blocks;
     let messages = [];
     let username;
-    User.findOne({ userId: userId })
+    Room.findOne({ roomId: roomId })
         .then((user) => {
             blocks = user.block;
             username = user.user;
             const promises = new Promise((resolve, reject) => {
                 for (let i = 0; i < blocks.length; i++) {
-                    axios.get("http://52.28.217.148:30096/block?", {
+                    axios.get("http://localhost:30099/block?", {
                         params: {
                             height: blocks[i]
                         }

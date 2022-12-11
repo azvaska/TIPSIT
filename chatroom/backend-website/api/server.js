@@ -9,7 +9,7 @@ const Room = require('./models/Room');
 const AuthRoute = require('./routes/auth');
 const cors = require('cors');
 const uuid = require('uuid');
-
+const path_gense = "/home/awasaka/Documents/programmi/TIPSIT/chatroom/backend-website/api/genesis.json"
 const http = require('http').Server(app);
 const io = require('socket.io')(http, {
     cors: {
@@ -30,6 +30,7 @@ io.on('connection', function (socket) {
                         Room.findOne({ roomId: data.roomId }).then((room) => {
                             if (room) {
                                 console.log("user joined room: " + data.roomId)
+                                io.to(data.roomId).emit("JoinedRoom", `A new user has joined the room : ${user.user} `)
                                 socket.join(data.roomId);
                             }
                         })
@@ -54,7 +55,7 @@ io.on('connection', function (socket) {
                             if (room) {
                                 let lc = await connect(null, {
                                     nodes:
-                                        [`ws://localhost:30098/websocket`,], genesis: require('/mnt/cestino/backup_robba/ProgrammiSviluppo/TIPSIT/chatroom/backend-website/api/genesis.json')
+                                        [`ws://localhost:30098/websocket`,], genesis: require(path_gense)
                                 })
 
                                 return await lc.send({
@@ -65,8 +66,16 @@ io.on('connection', function (socket) {
                                     timestamp: `${Math.floor(new Date().getTime() / 1000)}`,
                                 })
                                     .then(x => {
-                                        console.log("message sent to the blockchain" + Object.values(x));
-                                        io.to(data.roomId).emit('new-message', msg);
+                                        console.log("message sent to the blockchain" + JSON.stringify(x));
+                                        room.block.push(x.height)
+                                        room.save()
+                                        .then(_ => {
+                                            io.to(data.roomId).emit('new-message', msg);
+                                        })
+                                        .catch(err => {
+                                            console.log(JSON.stringify(socket))
+
+                                        })
                                     })
                                     .catch(err => console.log(err));
                             }
@@ -110,11 +119,11 @@ app.use('/api', AuthRoute);
 
 let lotionapp = require('lotion')({
     initialState: { messages: [] },
-    genesisPath: '/mnt/cestino/backup_robba/ProgrammiSviluppo/TIPSIT/chatroom/backend-website/api/genesis.json',
+    genesisPath: path_gense,
     rpcPort: 30098,
     p2pPort: 30099,
     logTendermint: true,
-    peers: ["16eab664372ed17a72177cd698371dec67613861@172.18.5.10:30094","ff12b6e5e47b47002494149a963dd10f1e92a4c8@172.18.5.11:30092"]
+    peers: ["b88b5d721a56b82baea2657940323445fba247fb@138.3.243.70:30094","0f36fd4d78f391a8e36808e9d8d8c267a000fb8d@138.3.243.70:30092"]
 })
 
 
