@@ -66,15 +66,19 @@ export default {
     methods: {
         handleSubmit(uname, pass) {
             this.submitted = true;
-            this.loggingIn = true;
+
             console.log(uname);
             axios.post('http://localhost:3080/api/login', qs.stringify({
                 username: uname,
                 password: pass
             }))
-            .then(function (res) {
+            .then((res) => {
+                if (res.data.userId == null) {
+                    console.log("User not found");
+                    return;
+                }
                 const token = res.data.token;
-
+            this.loggingIn = true;
                 // calc cookie expiration date
                 var now = new Date();
                 var time = now.getTime();
@@ -92,7 +96,9 @@ export default {
                 }
                 //else {}
             })
-            .catch(function (error) {
+            .catch((error) => {
+                this.submitted = false;
+
                 console.log(error);
             });
 

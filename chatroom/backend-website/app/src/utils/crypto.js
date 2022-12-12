@@ -22,7 +22,6 @@ function hexStringToArrayBuffer(hexString) {
   });
   
   var array = new Uint8Array(integers);
-  console.log(array);
   
   return array.buffer;
 }

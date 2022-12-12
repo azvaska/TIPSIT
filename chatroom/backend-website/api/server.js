@@ -30,7 +30,7 @@ io.on('connection', function (socket) {
                         Room.findOne({ roomid: data.roomId }).then((room) => {
                             if (room) {
                                 console.log("user joined room: " + data.roomId)
-                                io.to(data.roomId).emit("JoinedRoom", `A new user has joined the room : ${user.user} `)
+                                io.to(data.roomId).emit("JoinedRoom", {roomId:data.roomId, _id:user.userId})
                                 socket.join(data.roomId);
                             }
                         })

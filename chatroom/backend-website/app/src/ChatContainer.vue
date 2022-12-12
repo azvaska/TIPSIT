@@ -13,7 +13,7 @@
 			</button>
 			<button class="button-cancel" @click="addNewRoom = false">Cancel</button>
 		</form>
-		<chat-window :height="screenHeight" :theme="theme" :styles="styles" :current-user-id="currentUserId"
+		<chat-window :height="screenHeight" :theme="theme" :styles="styles" :username-options="userOption"  :current-user-id="currentUserId"
 			:room-id="roomId" :rooms="loadedRooms" :loading-rooms="loadingRooms" :messages="messages"
 			:messages-loaded="messagesLoaded" :rooms-loaded="roomsLoaded" :room-actions="roomActions"
 			:menu-actions="menuActions" :room-message="roomMessage" :templates-text="templatesText"
@@ -44,13 +44,14 @@ export default {
 	props: {
 		currentUserId: { type: String, required: true },
 		theme: { type: String, required: true },
-		isDevice: { type: Boolean, required: true }
+		isDevice: { type: Boolean, required: true },
 	},
 
 	data() {
 		return {
 			roomsPerPage: 15,
 			rooms: [],
+			userOption:{ minUsers: 1,currentUser:this.currentUserId},
 			roomId: '',
 			joinRoom: false,
 			startRooms: null,
@@ -125,12 +126,30 @@ export default {
 	},
 
 	mounted() {
+		this.$soketio.on('joinRoom', async (data) => {
+			let room = null;
+			for (let i = 0; i < this.rooms.length; i++) {
+				if (this.rooms[i].roomId == data.roomId) {
+					room = this.rooms[i]
+				}
+			}
+			if (room == null) {
+				console.log("Room not found" + data.roomId)
+				return;
+			}
+			room.users.push({_id: data.userId, username: "sus"})
+		})
+
 		this.$soketio.on('new-message', async (data) => {
 			let room = null;
 			for (let i = 0; i < this.rooms.length; i++) {
 				if (this.rooms[i].roomId == data.roomId) {
 					room = this.rooms[i]
 				}
+			}
+			if (room == null) {
+				console.log("Room not found" + data.roomId)
+				return;
 			}
 			console.log(this.rooms)
 			console.log(data)
@@ -141,8 +160,7 @@ export default {
 				content: await decrypt(room.iv, data.content, room.password),
 				timestamp: data.timestamp
 			};
-			console.log(await decrypt(room.iv, data.content, room.password))
-			console.log("New message")
+			room.lastMessage = message
 			const formattedMessage = this.formatMessage(room, message)
 			this.messages.push(formattedMessage);
 		})
@@ -210,61 +228,50 @@ export default {
 			// 	return
 			// }
 
-			let tempMsg = [];
 
 			axios.post("http://localhost:3080/api/get-room", {
 				name: this.RoomName,
 				password: this.PasswordNewRoom,
 				userId: this.currentUserId,
-			}).then(response => {
-				console.log(response)
-				
-				response.data.messages.forEach( async msg => {
-					msg.senderId= msg.userId;
-					console.log(fromBinary(response.data.iv))
-					console.log(msg.content)
-					console.log(msg)
-					msg.content = await decrypt(fromBinary(response.data.iv), msg.content, response.data.password);
-					tempMsg.push(msg)
-				})
-				this.fetchedMessages = this.fetchedMessages.concat(tempMsg);
+			}).then( async response => {
+				console.log("IV: " + fromBinary(response.data.iv))
+				const sus = async (msg) => {
+						msg.senderId = msg.userId;
+						msg.username = msg.userId;
+
+						msg.content = await decrypt(fromBinary(response.data.iv), msg.content, response.data.password);
+						return msg
+				}
+				let actions = response.data.messages.map(sus); // run the function over all items
+				let results = await  Promise.all(actions); // pass array of promises
+				let users=new Set();
+				results.forEach((msg) => {
+					users.add(msg.senderId)
+								})
+				this.fetchedMessages = this.fetchedMessages.concat(results);
 				// Messaggi fetchati nell'array
-
+				let user_room = [];
+				users.forEach((user)=>{
+					user_room.push({
+						_id: user,
+						username: user,
+					})
+				})
+				console.log(user_room)
+				console.log(users)
 				const roomList = [];
-				// creo le stanze 
-				// TODO forse mettere l'username diretto 
-
-				// this.fetchedMessages.forEach(msg => {
-				// 	let userId = msg.userId;
-				// 	let destinationId = msg.destinationId;
-
-				// 	let userId;
-				// 	if (userId == this.currentUserId) userId = destinationId;
-				// 	else userId = userId;
-
-				// 	if (uu.find(element => element == userId) == undefined) {
-				// 		uu.push(userId);
-				// 	}
-				// })
 				let room = {};
 
 				room.roomId = response.data.chatId;
 				room.roomName = this.RoomName;
-					room.timestamp = `${new Date().getHours()}:${new Date().getMinutes()}`;
-				room.users = [						{
-							_id: "sus",
-							username: "giocn"
-						}];
+				room.timestamp = `${new Date().getHours()}:${new Date().getMinutes()}`;
+				room.users = user_room
 
 				room.avatar = 'https://www.meme-arsenal.com/memes/b6a18f0ffd345b22cd219ef0e73ea5fe.jpg';
 				room.index = 0;
 				room.iv = fromBinary(response.data.iv)
 				room.password = response.data.password
-				room.lastMessage = {
-					height: 0,
-					content: 'Stanza fetchata!',
-					timestamp: `${new Date().getHours()}:${new Date().getMinutes()}`
-				}
+				room.lastMessage = this.fetchedMessages[this.fetchedMessages.length - 1]
 				this.roomsLoadedCount += 1;
 
 				roomList.push(room);
@@ -272,16 +279,15 @@ export default {
 				//this.listenLastMessage(room);
 				this.rooms = this.rooms.concat(roomList);
 				this.roomsLoaded = true;
-				console.log(room);
 				this.loadingRooms = false
 
 				if (!this.rooms.length) {
 					this.loadingRooms = false
-					this.roomsLoadedCount = 0
+					this.roomsLoadedCount = 1
 				}
 				this.$soketio.emit('join', { roomId: room.roomId, userId: this.currentUserId });
 
-				this.fetchMessages({ room: room})
+				this.fetchMessages({ room: room })
 			});
 		},
 
@@ -304,12 +310,10 @@ export default {
 			// prendo i messaggi solo di quella stanza
 
 			if (options.reset) this.messages = []
-			console.log(this.fetchedMessages)
 
 			this.fetchedMessages.forEach(message => {
 				const formattedMessage = this.formatMessage(room, message)
-				console.log("MESSAGGIO FORMATTATO" + formattedMessage)
-				this.messages.unshift(formattedMessage);
+				this.messages.push(formattedMessage);
 			})
 
 			if (this.lastLoadedMessage) {
@@ -322,7 +326,6 @@ export default {
 		},
 		formatMessage(room, message) {
 			let date = new Date(message.timestamp * 1000);
-			console.log("dATA MSG" + date)
 			const formattedMessage = {
 				...message,
 				...{
@@ -330,8 +333,6 @@ export default {
 					seen: true,
 					timestamp: `${date.getHours()}:${date.getMinutes()}`,
 					date: `${date.getDay()}/${date.getMonth()}/${date.getFullYear()}`,
-					username: room.users.find(user => message.sender_id === user._id)
-						?.username,
 					// avatar: senderUser ? senderUser.avatar : null,
 					distributed: true
 				}
@@ -419,6 +420,7 @@ export default {
 					room.roomId = res.data.chatId;
 					room.roomName = this.RoomName;
 					room.timestamp = `${new Date().getHours()}:${new Date().getMinutes()}`;
+					console.log("IV ROOM C: " + fromBinary(res.data.iv))
 					room.iv = fromBinary(res.data.iv)
 					room.password = res.data.password
 					room.users = [
