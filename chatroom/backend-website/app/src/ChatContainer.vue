@@ -137,7 +137,7 @@ export default {
 				console.log("Room not found" + data.roomId)
 				return;
 			}
-			room.users.push({_id: data.userId, username: "sus"})
+			room.users.push({_id: data.userId, username: data.userId})
 		})
 
 		this.$soketio.on('new-message', async (data) => {
@@ -158,11 +158,14 @@ export default {
 				roomId: data.roomId,
 				senderId: data.userId,
 				content: await decrypt(room.iv, data.content, room.password),
-				timestamp: data.timestamp
+				timestamp: data.timestamp,
+				username : data.userId,
 			};
+			this.fetchedMessages = this.fetchedMessages.push(message);
+			// const formattedMessage = this.formatMessage(room, message)
 			room.lastMessage = message
-			const formattedMessage = this.formatMessage(room, message)
-			this.messages.push(formattedMessage);
+			// this.messages.push(formattedMessage);
+			this.fetchMessages(room)
 		})
 		this.fetchRooms()
 		//await checkNewMsg();
@@ -238,7 +241,6 @@ export default {
 				const sus = async (msg) => {
 						msg.senderId = msg.userId;
 						msg.username = msg.userId;
-
 						msg.content = await decrypt(fromBinary(response.data.iv), msg.content, response.data.password);
 						return msg
 				}
@@ -257,8 +259,6 @@ export default {
 						username: user,
 					})
 				})
-				console.log(user_room)
-				console.log(users)
 				const roomList = [];
 				let room = {};
 
@@ -271,13 +271,14 @@ export default {
 				room.index = 0;
 				room.iv = fromBinary(response.data.iv)
 				room.password = response.data.password
-				room.lastMessage = this.fetchedMessages[this.fetchedMessages.length - 1]
+				room.lastMessage = this.fetchedMessages[this.fetchedMessages.length - 1] || null;
 				this.roomsLoadedCount += 1;
 
 				roomList.push(room);
 
 				//this.listenLastMessage(room);
 				this.rooms = this.rooms.concat(roomList);
+				console.log("ROOMS: " + this.rooms)
 				this.roomsLoaded = true;
 				this.loadingRooms = false
 
@@ -312,8 +313,11 @@ export default {
 			if (options.reset) this.messages = []
 
 			this.fetchedMessages.forEach(message => {
-				const formattedMessage = this.formatMessage(room, message)
-				this.messages.push(formattedMessage);
+				console.log(message)
+				if (message.roomId == room.roomId){
+					const formattedMessage = this.formatMessage(room, message)
+					this.messages.push(formattedMessage);
+				}
 			})
 
 			if (this.lastLoadedMessage) {
@@ -369,9 +373,9 @@ export default {
 			// 		console.log(response.data.message);
 			// 	})
 
-			let date = new Date(message.timestamp * 1000)
-			room.lastMessage.content = message.content;
-			room.lastMessage.timestamp = `${date.getHours()}:${date.getMinutes()}`;
+			// let date = new Date(message.timestamp * 1000)
+			// room.lastMessage.content = message.content;
+			// room.lastMessage.timestamp = `${date.getHours()}:${date.getMinutes()}`;
 		},
 
 		menuActionHandler({ action, roomId }) {

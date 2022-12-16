@@ -71,7 +71,7 @@ io.on('connection', function (socket) {
                                         room.save()
                                         .then(sus => {
                                             console.log("room updated")
-                                            console.log(sus)
+                                            console.log(msg)
                                             io.to(data.roomId).emit('new-message', msg);
                                         })
                                         .catch(err => {
