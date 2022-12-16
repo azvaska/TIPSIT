@@ -66,17 +66,13 @@ io.on('connection', function (socket) {
                                     timestamp: `${Math.floor(new Date().getTime() / 1000)}`,
                                 })
                                     .then(x => {
-                                        console.log("message sent to the blockchain" + JSON.stringify(x));
                                         room.block.push(x.height)
                                         room.save()
                                         .then(sus => {
-                                            console.log("room updated")
-                                            console.log(msg)
                                             io.to(data.roomId).emit('new-message', msg);
                                         })
                                         .catch(err => {
                                             console.log(JSON.stringify(err))
-
                                         })
                                     })
                                     .catch(err => console.log(err));
@@ -120,14 +116,14 @@ let lotionapp = require('lotion')({
     initialState: { messages: [] },
     genesisPath: path_gense,
     rpcPort: 30098,
+    
     p2pPort: 30099,
     logTendermint: true,
-    peers: ["b88b5d721a56b82baea2657940323445fba247fb@138.3.243.70:30094","0f36fd4d78f391a8e36808e9d8d8c267a000fb8d@138.3.243.70:30092"]
+    peers: ["894b34acbc0ef6f5e219c0948a3ee79fbd441dac@138.3.243.70:30094","60b8dc9f84ae24e280ba4556f74c419b9afd9487@138.3.243.70:30092"]
 })
 
 
 lotionapp.use((state, tx) => {
-    console.log("new message received: " + tx);
     state.messages.push({
         _id: tx._id,
         userId: tx.userId,
@@ -142,6 +138,4 @@ lotionapp.start(3000).then(async ({ GCI }) => {
         console.log('listening on *:3000 for socket.io');
     });
     app.listen(PORT, () => console.log(`[INFO] Server listening on port ${PORT}`));
-    console.log(GCI)
-    console.log("Lotion started")
 })

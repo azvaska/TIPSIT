@@ -117,7 +117,6 @@ export default {
 
 	computed: {
 		loadedRooms() {
-			console.log(this.rooms.slice(0, this.roomsLoadedCount))
 			return this.rooms.slice(0, this.roomsLoadedCount)
 		},
 		screenHeight() {
@@ -151,8 +150,6 @@ export default {
 				console.log("Room not found" + data.roomId)
 				return;
 			}
-			console.log(this.rooms)
-			console.log(data)
 			let message = {
 				_id: data._id,
 				roomId: data.roomId,
@@ -161,11 +158,9 @@ export default {
 				timestamp: data.timestamp,
 				username : data.userId,
 			};
-			this.fetchedMessages = this.fetchedMessages.push(message);
-			// const formattedMessage = this.formatMessage(room, message)
+			this.fetchedMessages.push(message);
 			room.lastMessage = message
-			// this.messages.push(formattedMessage);
-			this.fetchMessages(room)
+			this.fetchMessages({room ,options: {reset: true}})
 		})
 		this.fetchRooms()
 		//await checkNewMsg();
@@ -237,7 +232,6 @@ export default {
 				password: this.PasswordNewRoom,
 				userId: this.currentUserId,
 			}).then( async response => {
-				console.log("IV: " + fromBinary(response.data.iv))
 				const sus = async (msg) => {
 						msg.senderId = msg.userId;
 						msg.username = msg.userId;
@@ -278,17 +272,16 @@ export default {
 
 				//this.listenLastMessage(room);
 				this.rooms = this.rooms.concat(roomList);
-				console.log("ROOMS: " + this.rooms)
 				this.roomsLoaded = true;
 				this.loadingRooms = false
 
 				if (!this.rooms.length) {
 					this.loadingRooms = false
-					this.roomsLoadedCount = 1
+					// this.roomsLoadedCount = 1
 				}
 				this.$soketio.emit('join', { roomId: room.roomId, userId: this.currentUserId });
 
-				this.fetchMessages({ room: room })
+				this.fetchMessages({room, options: {reset: true}})
 			});
 		},
 
@@ -313,7 +306,6 @@ export default {
 			if (options.reset) this.messages = []
 
 			this.fetchedMessages.forEach(message => {
-				console.log(message)
 				if (message.roomId == room.roomId){
 					const formattedMessage = this.formatMessage(room, message)
 					this.messages.push(formattedMessage);
@@ -345,8 +337,7 @@ export default {
 			return formattedMessage
 		},
 
-		async sendMessage({ content, roomId, files, replyMessage }) {
-			console.log(replyMessage);
+		async sendMessage({ content, roomId, files }) {
 			let room = {}
 			for (let i = 0; i < this.rooms.length; i++) {
 				if (this.rooms[i].roomId == roomId) {
@@ -359,7 +350,6 @@ export default {
 				content: await encrypt(room.iv, content, room.password),
 				timestamp: Math.floor(new Date().getTime() / 1000)
 			}
-			console.log(message)
 			if (files) {
 				files = null;
 			}
@@ -397,7 +387,6 @@ export default {
 
 		async createRoom() {
 			console.log("createRoom");
-			console.log(this.joinRoom)
 			if (this.joinRoom) {
 				this.disableForm = true
 				this.joinRoom = false;
@@ -413,7 +402,6 @@ export default {
 
 			}))
 				.then((res) => {
-					console.log(res.data);
 					if (res.data.error) {
 						console.log("non trovato");
 						return;
@@ -424,7 +412,6 @@ export default {
 					room.roomId = res.data.chatId;
 					room.roomName = this.RoomName;
 					room.timestamp = `${new Date().getHours()}:${new Date().getMinutes()}`;
-					console.log("IV ROOM C: " + fromBinary(res.data.iv))
 					room.iv = fromBinary(res.data.iv)
 					room.password = res.data.password
 					room.users = [
@@ -439,26 +426,23 @@ export default {
 					room.lastMessage = {
 						height: 0,
 						content: 'Stanza creata!',
-						//timestamp: formatTimestamp(
-						//	new Date(),
-						//)
+						// timestamp: formatTimestamp(
+						// 	new Date(),
+						// )
 					}
-					console.log(this.rooms);
 					this.ErrorRoom = ""
-					console.log({ room: room.roomId, userId: userId })
-					this.$soketio.emit('join', { roomId: room.roomId, userId: userId });
 					this.rooms.push(room);
-					//this.listenLastMessage(room);
 					this.roomsLoadedCount += 1;
-
-
 					this.roomsLoaded = true
+					this.$soketio.emit('join', { roomId: room.roomId, userId: userId });
+					//this.listenLastMessage(room);
+
+
 				})
 				.catch((error) => {
 					this.ErrorRoom = error.response.data.message
 					this.addRoom()
 
-					console.log(error);
 				})
 
 			this.addNewRoom = false
@@ -476,11 +460,6 @@ export default {
 			this.removeUserId = ''
 		}
 
-		// ,incrementDbCounter(type, size) {
-		// 	size = size || 1
-		// 	this.dbRequestCount += size
-		// 	console.log(type, size)
-		// }
 	}
 
 }
