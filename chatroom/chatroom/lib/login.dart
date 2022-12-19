@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'package:http/http.dart' as http;
 
+import 'config.dart';
+
 // ignore: non_constant_identifier_names
 User? user_authenticated;
 
@@ -15,7 +17,7 @@ class LoginScreen extends StatelessWidget {
 
   Future<User> fetchUser(LoginData data) async {
     final response = await http.post(
-        Uri.parse('http://138.3.243.70:3080/api/login'),
+        Uri.parse('http://${Settings.ip}/api/login'),
         body: {"username": data.name, "password": data.password});
     var userTemp = jsonDecode(response.body);
     userTemp['email'] = data.name;

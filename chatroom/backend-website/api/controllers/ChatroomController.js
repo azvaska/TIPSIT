@@ -5,9 +5,7 @@ const qs = require('qs');
 const uuid = require('uuid')
 const crypto = require('crypto');
 
-function generateUserId() {
-    return uuid.v4();
-}
+
 
 function b64EncodeUnicode(str) {
 

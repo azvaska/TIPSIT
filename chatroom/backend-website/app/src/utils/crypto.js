@@ -25,9 +25,9 @@ function hexStringToArrayBuffer(hexString) {
   
   return array.buffer;
 }
-export async function encrypt(ivStr, plaintext, pwHash) {
+export async function encrypt(iv, plaintext, pwHash) {
   pwHash=hexStringToArrayBuffer(pwHash);
-    const iv = new Uint8Array(Array.from(ivStr).map(ch => ch.charCodeAt(0)));
+    // const iv = new Uint8Array(Array.from(ivStr).map(ch => ch.charCodeAt(0)));
     // specify algorithm to use
     const alg = { name: 'AES-GCM', iv: iv };
     // generate key from pw
@@ -50,10 +50,8 @@ export async function encrypt(ivStr, plaintext, pwHash) {
    * @param   {string} password
    * @returns {Promise<string>}
    */
-  export async function decrypt(ivStr, ciphertext, pwHash) {
+  export async function decrypt(iv, ciphertext, pwHash) {
     pwHash=hexStringToArrayBuffer(pwHash);
-
-    const iv = new Uint8Array(Array.from(ivStr).map(ch => ch.charCodeAt(0)));
     // specify algorithm to use
     const alg = { name: 'AES-GCM', iv: iv };
     // generate key from pw
@@ -79,8 +77,11 @@ export async function encrypt(ivStr, plaintext, pwHash) {
 
   export function fromBinary(str) {
       // Going backwards: from bytestream, to percent-encoding, to original string.
-      return decodeURIComponent(atob(str).split('').map(function(c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-
+      return new Uint8Array(
+           atob(str)
+              .split('')
+              .map(function (c) {
+                   return c.charCodeAt(0);
+               })
+        );
   }
