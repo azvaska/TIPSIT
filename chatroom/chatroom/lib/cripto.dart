@@ -33,8 +33,7 @@ class Aes256Gcm {
   }
 
   /// Decrypts passed [ciphertext] with key generated based on [password] argument
-  static Future<String> decrypt(
-      Room r, String cipherText, String password) async {
+  static Future<String> decrypt(Room r, String cipherText) async {
     final cText = base64.decode(cipherText);
     final iv = r.iv;
     final key = SecretKey(r.password);

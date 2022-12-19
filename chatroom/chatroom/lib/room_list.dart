@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chatroom/config.dart';
 import 'package:chatroom/room_login.dart';
 import 'package:chatroom/schema/user.dart';
@@ -8,6 +10,8 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:socket_io_client/socket_io_client.dart';
 import 'chat.dart';
+import 'cripto.dart';
+import 'schema/message.dart';
 import 'schema/room.dart';
 import 'widgets/room_list.dart';
 
@@ -20,15 +24,44 @@ class RoomList extends StatefulWidget {
 }
 
 class _RoomListState extends State<RoomList> {
+  IO.Socket socket = IO.io(
+      'http://${Settings.ip}:3000',
+      OptionBuilder().setTransports(['websocket']) // for Flutter or Dart VM
+          .build());
+  bool reload = false;
+  late Room selectedRoom;
+  StreamController<Message> streamController = StreamController.broadcast();
+  @override
+  dispose() {
+    socket.dispose();
+    super.dispose();
+    print("DIOCANE DISPOSE");
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    IO.Socket socket = IO.io(
-        'http://${Settings.ip}:3000',
-        OptionBuilder().setTransports(['websocket']) // for Flutter or Dart VM
-            .setExtraHeaders({'foo': 'bar'}) // optional
-            .build());
+    socket.onConnect((_) {
+      print('connect SUSSAAAAAAAAAAa');
+
+      // socket.emit('join', widget.user.userId);
+    });
+
+    socket.on("new-message", (data) async {
+      for (var room in rooms) {
+        if (room.roomid == data["roomId"]) {
+          var message = Message.fromJson(room, data);
+          message.content = await Aes256Gcm.decrypt(room, message.content);
+          streamController.add(message);
+          room.messages.add(message);
+          reload = true;
+        }
+      }
+      setState(() {
+        reload = true;
+      });
+    });
   }
 
   List<Room> rooms = [];
@@ -74,6 +107,10 @@ class _RoomListState extends State<RoomList> {
                             {
                               setState(() {
                                 rooms.add(value);
+                                socket.emit('join', {
+                                  "roomId": value.roomid,
+                                  "userId": widget.user.userId
+                                });
                               })
                             }
                         });
@@ -86,11 +123,13 @@ class _RoomListState extends State<RoomList> {
               ),
               ...List.generate(rooms.length, (index) {
                 return GestureDetector(
+                  key: UniqueKey(),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) => Chat(
+                                new_messages: streamController.stream,
                                 user: widget.user,
                                 room: rooms[index],
                               )),

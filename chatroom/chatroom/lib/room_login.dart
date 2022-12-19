@@ -21,29 +21,33 @@ class _RoomLoginState extends State<RoomLogin> {
   TextEditingController nameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-  Future<Room> createRoom() async {
-    final response = await http
-        .post(Uri.parse('http://${Settings.ip}/api/create-room'), body: {
-      "userId": widget.user.userId,
-      "password": passwordController.text,
-      "name": nameController.text
-    });
-    var roomTemp = jsonDecode(response.body);
-    print(roomTemp);
-    if (response.statusCode == 200) {
-      final DateTime now = DateTime.now();
-      final DateFormat formatter = DateFormat('HH:mm');
-      final String formatted = formatter.format(now);
-      roomTemp['timestamp'] = formatted;
-      roomTemp['name'] = nameController.text;
-      roomTemp['iv'] = base64.decode(roomTemp['iv']);
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
-      return Room.fromJson(roomTemp);
-    } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load Room');
+  Future<Room?> createRoom() async {
+    try {
+      final response = await http
+          .post(Uri.parse('http://${Settings.ip}:3080/api/create-room'), body: {
+        "userId": widget.user.userId,
+        "password": passwordController.text,
+        "name": nameController.text
+      });
+      var roomTemp = jsonDecode(response.body);
+      print(roomTemp);
+      if (response.statusCode == 200) {
+        final DateTime now = DateTime.now();
+        final DateFormat formatter = DateFormat('HH:mm');
+        final String formatted = formatter.format(now);
+        roomTemp['timestamp'] = formatted;
+        roomTemp['name'] = nameController.text;
+        roomTemp['iv'] = base64.decode(roomTemp['iv']);
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
+        return Room.fromJson(roomTemp);
+      } else {
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        throw Exception('Failed to load Room');
+      }
+    } catch (e) {
+      return null;
     }
   }
 
@@ -56,7 +60,7 @@ class _RoomLoginState extends State<RoomLogin> {
       ),
       body: WillPopScope(
         onWillPop: () async {
-          Navigator.pop(context, false);
+          Navigator.pop(context, null);
           return false;
         },
         child: SingleChildScrollView(

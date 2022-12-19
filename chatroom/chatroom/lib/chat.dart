@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:chatroom/schema/message.dart';
 import 'package:chatroom/schema/room.dart';
 import 'package:chatroom/schema/user.dart';
 import 'package:chatroom/widgets/chatbubble.dart';
@@ -9,18 +12,36 @@ import 'package:flutter/src/widgets/framework.dart';
 
 class Chat extends StatefulWidget {
   Room room;
+  Stream<Message> new_messages;
   User user;
-  Chat({required this.room, super.key, required this.user});
+  Chat(
+      {super.key,
+      required this.room,
+      required this.user,
+      required this.new_messages});
 
   @override
   State<Chat> createState() => _ChatState();
 }
 
 class _ChatState extends State<Chat> {
+  StreamSubscription<Message>? sus;
   @override
   void initState() {
     // TODO: implement initState
+    sus = widget.new_messages.listen((event) {
+      setState(() {
+        widget.room.messages.add(event);
+      });
+    });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    sus!.cancel();
+    super.dispose();
   }
 
   @override

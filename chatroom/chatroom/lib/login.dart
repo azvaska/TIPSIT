@@ -17,7 +17,7 @@ class LoginScreen extends StatelessWidget {
 
   Future<User> fetchUser(LoginData data) async {
     final response = await http.post(
-        Uri.parse('http://${Settings.ip}/api/login'),
+        Uri.parse('http://${Settings.ip}:3080/api/login'),
         body: {"username": data.name, "password": data.password});
     var userTemp = jsonDecode(response.body);
     userTemp['email'] = data.name;
