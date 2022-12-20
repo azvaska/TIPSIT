@@ -7,11 +7,16 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'config.dart';
+import 'cripto.dart';
+import 'schema/message.dart';
 import 'schema/room.dart';
+import 'widgets/room_list.dart';
 
 class RoomLogin extends StatefulWidget {
   final User user;
-  const RoomLogin({super.key, required this.user});
+  final bool Function(String) checkRoomExists;
+  const RoomLogin(
+      {super.key, required this.user, required this.checkRoomExists});
 
   @override
   State<RoomLogin> createState() => _RoomLoginState();
@@ -20,34 +25,74 @@ class RoomLogin extends StatefulWidget {
 class _RoomLoginState extends State<RoomLogin> {
   TextEditingController nameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  String ErrorText = "";
 
   Future<Room?> createRoom() async {
-    try {
-      final response = await http
-          .post(Uri.parse('http://${Settings.ip}:3080/api/create-room'), body: {
-        "userId": widget.user.userId,
-        "password": passwordController.text,
-        "name": nameController.text
-      });
-      var roomTemp = jsonDecode(response.body);
-      print(roomTemp);
-      if (response.statusCode == 200) {
-        final DateTime now = DateTime.now();
-        final DateFormat formatter = DateFormat('HH:mm');
-        final String formatted = formatter.format(now);
-        roomTemp['timestamp'] = formatted;
-        roomTemp['name'] = nameController.text;
-        roomTemp['iv'] = base64.decode(roomTemp['iv']);
-        // If the server did return a 200 OK response,
-        // then parse the JSON.
-        return Room.fromJson(roomTemp);
-      } else {
-        // If the server did not return a 200 OK response,
-        // then throw an exception.
-        throw Exception('Failed to load Room');
+    final response = await http
+        .post(Uri.parse('http://${Settings.ip}:3080/api/create-room'), body: {
+      "userId": widget.user.userId,
+      "password": passwordController.text,
+      "name": nameController.text
+    });
+    var roomTemp = jsonDecode(response.body);
+    print(roomTemp);
+    if (response.statusCode == 200) {
+      final DateTime now = DateTime.now();
+      final DateFormat formatter = DateFormat('HH:mm');
+      final String formatted = formatter.format(now);
+      roomTemp['timestamp'] = formatted;
+      roomTemp['name'] = nameController.text;
+      roomTemp['iv'] = base64.decode(roomTemp['iv']);
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+      return Room.fromJson(roomTemp);
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      return Future.error(Exception(roomTemp["message"]));
+      ;
+    }
+  }
+
+  Future<Room?> joinRoom() async {
+    final response = await http
+        .post(Uri.parse('http://${Settings.ip}:3080/api/get-room'), body: {
+      "userId": widget.user.userId,
+      "password": passwordController.text,
+      "name": nameController.text
+    });
+    var roomTemp = jsonDecode(response.body);
+    print(roomTemp);
+    if (response.statusCode == 200) {
+      if (widget.checkRoomExists(roomTemp['chatId'])) {
+        return Future.error(Exception('Room already joined'));
       }
-    } catch (e) {
-      return null;
+      final DateTime now = DateTime.now();
+      final DateFormat formatter = DateFormat('HH:mm');
+      final String formatted = formatter.format(now);
+      List<Message> messages = [];
+
+      roomTemp['timestamp'] = formatted;
+      roomTemp['name'] = nameController.text;
+      roomTemp['iv'] = base64.decode(roomTemp['iv']);
+      roomTemp['lastMessage'] = "";
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+      Room r = Room.fromJson(roomTemp);
+      for (var message in roomTemp['messages']) {
+        message = Message.fromJson(message);
+        message.content = await Aes256Gcm.decrypt(r, message.content);
+        messages.add(message);
+      }
+      r.messages = messages;
+
+      r.lastMessage =
+          messages.isEmpty ? "Stanza creata!" : messages.last.content;
+      return r;
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      return Future.error(Exception(roomTemp["message"]));
     }
   }
 
@@ -97,6 +142,7 @@ class _RoomLoginState extends State<RoomLogin> {
                       hintText: 'Enter secure password for the room'),
                 ),
               ),
+              Text(ErrorText),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -106,9 +152,15 @@ class _RoomLoginState extends State<RoomLogin> {
                     decoration: const BoxDecoration(color: Colors.blue),
                     child: TextButton(
                       onPressed: () {
-                        createRoom().then((value) => {
-                              Navigator.pop(context, value),
-                            });
+                        createRoom()
+                            .then((value) => {
+                                  Navigator.pop(context, value),
+                                })
+                            .catchError((error, stackTrace) => {
+                                  setState(() {
+                                    ErrorText = error.message;
+                                  })
+                                });
                       },
                       child: const Text(
                         'Create',
@@ -123,7 +175,19 @@ class _RoomLoginState extends State<RoomLogin> {
                     decoration: const BoxDecoration(color: Colors.blue),
                     child: TextButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        joinRoom()
+                            .then((value) => {
+                                  Navigator.pop(context, value),
+                                })
+                            .catchError((error, stackTrace) => {
+                                  setState(() {
+                                    try {
+                                      ErrorText = error.message;
+                                    } catch (e) {
+                                      ErrorText = "Error in joining room";
+                                    }
+                                  })
+                                });
                       },
                       child: const Text(
                         'Join',

@@ -27,7 +27,7 @@ class Aes256Gcm {
       nonce: iv,
     );
 
-    final List<int> result = secretBox.cipherText;
+    final List<int> result = secretBox.cipherText + secretBox.mac.bytes;
 
     return base64.encode(result);
   }

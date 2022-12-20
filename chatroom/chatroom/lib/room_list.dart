@@ -35,7 +35,6 @@ class _RoomListState extends State<RoomList> {
   dispose() {
     socket.dispose();
     super.dispose();
-    print("DIOCANE DISPOSE");
   }
 
   @override
@@ -44,17 +43,18 @@ class _RoomListState extends State<RoomList> {
     super.initState();
     socket.onConnect((_) {
       print('connect SUSSAAAAAAAAAAa');
-
-      // socket.emit('join', widget.user.userId);
+      for (var room in rooms) {
+        socket.emit('join', widget.user.userId);
+      }
     });
 
     socket.on("new-message", (data) async {
       for (var room in rooms) {
         if (room.roomid == data["roomId"]) {
-          var message = Message.fromJson(room, data);
+          var message = Message.fromJson(data);
           message.content = await Aes256Gcm.decrypt(room, message.content);
-          streamController.add(message);
           room.messages.add(message);
+          streamController.add(message);
           reload = true;
         }
       }
@@ -65,18 +65,13 @@ class _RoomListState extends State<RoomList> {
   }
 
   List<Room> rooms = [];
-  void open_room() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => RoomLogin(user: widget.user)),
-    ).then((value) => {
-          if (value != null)
-            {
-              setState(() {
-                rooms.add(value);
-              })
-            }
-        });
+  bool checkRoomExists(String roomid) {
+    for (var room in rooms) {
+      if (room.roomid == roomid) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @override
@@ -101,7 +96,9 @@ class _RoomListState extends State<RoomList> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => RoomLogin(user: widget.user)),
+                          builder: (context) => RoomLogin(
+                              user: widget.user,
+                              checkRoomExists: checkRoomExists)),
                     ).then((value) => {
                           if (value != null)
                             {
@@ -132,6 +129,7 @@ class _RoomListState extends State<RoomList> {
                                 new_messages: streamController.stream,
                                 user: widget.user,
                                 room: rooms[index],
+                                socketIo: socket,
                               )),
                     ).then((value) => {
                           if (value != null)

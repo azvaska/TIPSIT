@@ -16,7 +16,7 @@ class Message {
     required this.timestamp,
   });
 
-  factory Message.fromJson(Room r, Map<String, dynamic> json) => Message(
+  factory Message.fromJson(Map<String, dynamic> json) => Message(
         roomId: json["roomId"],
         id: json["_id"],
         senderId: json["userId"],

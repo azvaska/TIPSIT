@@ -90,12 +90,12 @@ const getRoom = (req, res) => {
                     console.log({
                         message: 'Found the room Successfully!'
                         , iv: room.iv, password: room.password, chatId: room.roomid,
-                        messages: messages
+                        messages: messages,timestamp:room.createdAt
                     })
                     res.json({
                         message: 'Found the room Successfully!'
                         , iv: room.iv, password: room.password, chatId: room.roomid,
-                        messages: messages
+                        messages: messages,timestamp:room.createdAt
                     })
                     }
                 console.log(blocks)
@@ -140,7 +140,7 @@ const getRoom = (req, res) => {
                     res.json({
                         message: 'Found the room Successfully!'
                         , iv: room.iv, password: room.password, chatId: room.roomid,
-                        messages: messages
+                        messages: messages,timestamp:room.createdAt
                     })
                 })
 

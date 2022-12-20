@@ -3,13 +3,9 @@ import 'package:chatroom/schema/user.dart';
 import 'package:flutter/material.dart';
 
 class InputWidget extends StatelessWidget {
-  final TextEditingController textEditingController = TextEditingController();
-
-  InputWidget(
-      {super.key,
-      required textEditingController,
-      required Room room,
-      required User user});
+  final TextEditingController controller;
+  void Function() sendMessage;
+  InputWidget({super.key, required this.controller, required this.sendMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +31,7 @@ class InputWidget extends StatelessWidget {
           Flexible(
             child: TextField(
               style: const TextStyle(fontSize: 15.0),
-              controller: textEditingController,
+              controller: controller,
               decoration: const InputDecoration.collapsed(
                 hintText: 'Type a message',
               ),
@@ -49,7 +45,9 @@ class InputWidget extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 8.0),
               child: IconButton(
                 icon: const Icon(Icons.send),
-                onPressed: () => {},
+                onPressed: () {
+                  sendMessage();
+                },
               ),
             ),
           ),

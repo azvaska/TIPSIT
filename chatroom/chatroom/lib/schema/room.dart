@@ -3,7 +3,16 @@ import 'package:flutter/foundation.dart';
 import 'message.dart';
 import 'package:convert/convert.dart';
 
-class Room {
+class Room<T> {
+  String lastMessage;
+  final String roomid;
+  final String name;
+  final Uint8List password;
+  final Uint8List iv;
+  String timestamp;
+
+  List<T> messages;
+
   Room(
       {required this.roomid,
       required this.name,
@@ -12,13 +21,6 @@ class Room {
       required this.lastMessage,
       required this.messages,
       required this.timestamp});
-  final String lastMessage;
-  final String roomid;
-  final String name;
-  final Uint8List password;
-  final Uint8List iv;
-  final String timestamp;
-  List<Message> messages;
 
   factory Room.fromJson(Map<String, dynamic> json) => Room(
         roomid: json["chatId"],

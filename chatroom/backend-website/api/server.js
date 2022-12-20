@@ -40,6 +40,7 @@ io.on('connection', function (socket) {
     });
     socket.on('message', function (data) {
         {
+            console.log(data)
             let messageId = uuid.v4();
             let msg = {
                 _id: `${messageId}`,
