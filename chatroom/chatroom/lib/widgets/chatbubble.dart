@@ -68,9 +68,11 @@ class ChatBubble extends StatelessWidget {
                       fontSize: 15),
                 ),
                 Text(
-                  DateTime.fromMillisecondsSinceEpoch(
-                          int.parse(timestamp) * 1000)
-                      .toString(),
+                  timestamp.isNotEmpty
+                      ? DateTime.fromMillisecondsSinceEpoch(
+                              int.parse(timestamp) * 1000)
+                          .toString()
+                      : "Sending...",
                   style: Theme.of(context).textTheme.bodyText1!.copyWith(
                       color: isCurrentUser ? Colors.white : Colors.black87,
                       fontSize: 10),

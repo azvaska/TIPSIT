@@ -90,7 +90,6 @@ class _ChatState extends State<Chat> {
   @override
   Widget build(BuildContext context) {
     var messageRender = [...widget.room.messages, ...waiting_to_aknowledge];
-    print(messageRender);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(

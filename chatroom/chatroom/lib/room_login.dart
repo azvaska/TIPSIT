@@ -35,7 +35,6 @@ class _RoomLoginState extends State<RoomLogin> {
       "name": nameController.text
     });
     var roomTemp = jsonDecode(response.body);
-    print(roomTemp);
     if (response.statusCode == 200) {
       final DateTime now = DateTime.now();
       final DateFormat formatter = DateFormat('HH:mm');
@@ -85,6 +84,7 @@ class _RoomLoginState extends State<RoomLogin> {
         messages.add(message);
       }
       r.messages = messages;
+      r.messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
       r.lastMessage =
           messages.isEmpty ? "Stanza creata!" : messages.last.content;
