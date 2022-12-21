@@ -33,9 +33,10 @@
 import ChatWindow from 'vue-advanced-chat'
 import 'vue-advanced-chat/dist/vue-advanced-chat.css'
 import { decrypt, encrypt, fromBinary } from "./utils/crypto"
+import  Config  from "./utils/config"
 const axios = require('axios').default;
 const qs = require('qs');
-
+const ip_addr= Config.ip_addr;
 export default {
 	components: {
 		ChatWindow
@@ -188,21 +189,6 @@ export default {
 			this.resetMessages()
 		},
 
-		/*async checkNewMsg() {
-			while (true) {
-				setTimeout(() => {
-					axios.post('http://localhost:3080/api/getBlockNumb', qs.stringify({
-						userId: this.currentUserId
-					}))
-					.then((response) => {
-						if(response.data.number != this.fetchedMessages.length) {
-							this.fetchRooms();
-						}
-					})
-				}, 3000)
-			}
-		},*/
-
 		resetMessages() {
 			this.messages = []
 			this.messagesLoaded = false
@@ -227,7 +213,7 @@ export default {
 			// }
 
 
-			axios.post("http://localhost:3080/api/get-room", {
+			axios.post(`http://${ip_addr}:3080/api/get-room`, {
 				name: this.RoomName,
 				password: this.PasswordNewRoom,
 				userId: this.currentUserId,
@@ -354,18 +340,7 @@ export default {
 				files = null;
 			}
 			this.$soketio.emit('message', message);
-			// axios.post("http://localhost:3080/api/send", {
-			// 	userId: message.sender_id,
-			// 	content: message.content,
-			// 	destinationId: roomId
-			// })
-			// 	.then((response) => {
-			// 		console.log(response.data.message);
-			// 	})
-
-			// let date = new Date(message.timestamp * 1000)
-			// room.lastMessage.content = message.content;
-			// room.lastMessage.timestamp = `${date.getHours()}:${date.getMinutes()}`;
+			
 		},
 
 		menuActionHandler({ action, roomId }) {
@@ -395,7 +370,7 @@ export default {
 				return;
 			}
 
-			axios.post('http://localhost:3080/api/create-room', qs.stringify({
+			axios.post(`http://${ip_addr}:3080/api/create-room`, qs.stringify({
 				userId: this.currentUserId,
 				name: this.RoomName,
 				password: this.PasswordNewRoom,

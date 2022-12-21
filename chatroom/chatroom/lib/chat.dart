@@ -33,15 +33,21 @@ class _ChatState extends State<Chat> {
   StreamSubscription<Message>? sus;
   TextEditingController controller = TextEditingController();
   final ScrollController scrollController = ScrollController();
+  List<Message> waiting_to_aknowledge = [];
+
   @override
   void initState() {
     // TODO: implement initState
-
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      scrollController.animateTo(scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 1),
+          curve: Curves.fastOutSlowIn);
+    });
     sus = widget.new_messages.listen((event) {
       setState(() {
-        scrollController.animateTo(scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut);
+        waiting_to_aknowledge.removeWhere((element) =>
+            element.content == event.content &&
+            element.senderId == event.senderId);
       });
     });
     super.initState();
@@ -64,7 +70,18 @@ class _ChatState extends State<Chat> {
       };
 
       widget.socketIo.emit('message', message);
+      message["content"] = controller.text;
+      message["_id"] = "";
+      message["timestamp"] = "";
+      message["sent"] = "false";
+      Message messageTmp = Message.fromJson(message);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        scrollController.animateTo(scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 1),
+            curve: Curves.fastOutSlowIn);
+      });
       setState(() {
+        waiting_to_aknowledge.add(messageTmp);
         controller.text = "";
       });
     }
@@ -72,6 +89,8 @@ class _ChatState extends State<Chat> {
 
   @override
   Widget build(BuildContext context) {
+    var messageRender = [...widget.room.messages, ...waiting_to_aknowledge];
+    print(messageRender);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -85,16 +104,13 @@ class _ChatState extends State<Chat> {
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.only(bottom: 90),
+              padding: const EdgeInsets.only(bottom: 70),
               child: SingleChildScrollView(
                   controller: scrollController,
                   child: Column(children: [
-                    ...List.generate(widget.room.messages.length, (index) {
-                      return ChatBubble(
-                        text: widget.room.messages[index].content,
-                        isCurrentUser: widget.room.messages[index].senderId ==
-                            widget.user.userId,
-                      );
+                    ...List.generate(messageRender.length, (index) {
+                      return ChatBubble.fromMessage(messageRender[index],
+                          messageRender[index].senderId == widget.user.userId);
                     }),
                   ])),
             ),

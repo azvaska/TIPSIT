@@ -46,6 +46,7 @@ class InputWidget extends StatelessWidget {
               child: IconButton(
                 icon: const Icon(Icons.send),
                 onPressed: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
                   sendMessage();
                 },
               ),

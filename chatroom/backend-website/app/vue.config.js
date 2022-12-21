@@ -2,6 +2,8 @@ const { defineConfig } = require('@vue/cli-service')
 module.exports = defineConfig({
   transpileDependencies: true
 })
+import  Config  from "./utils/config"
+const ip_addr= Config.ip_addr;
 
 module.exports = {
   pwa: {
@@ -12,7 +14,7 @@ module.exports = {
   devServer: {
     proxy: {
       '^/api': {
-        target: 'http://localhost:3080',
+        target: `http://${ip_addr}:3080`,
         changeOrigin: true
       }
     }

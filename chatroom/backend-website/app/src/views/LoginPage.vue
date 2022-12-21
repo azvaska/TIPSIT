@@ -42,7 +42,8 @@
 const axios = require('axios').default;
 const qs = require('qs');
 import router from '@/router'
-
+import  Config  from "../utils/config"
+const ip_addr= Config.ip_addr;
 export default {
     mounted () {
         document.body.classList.add('sing');
@@ -68,7 +69,7 @@ export default {
             this.submitted = true;
 
             console.log(uname);
-            axios.post('http://localhost:3080/api/login', qs.stringify({
+            axios.post(`http://${ip_addr}:3080/api/login`, qs.stringify({
                 username: uname,
                 password: pass
             }))

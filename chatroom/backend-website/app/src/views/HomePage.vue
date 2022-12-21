@@ -19,6 +19,8 @@ import ChatContainer from "../ChatContainer.vue";
 const axios = require("axios").default;
 const qs = require("qs");
 import router from "@/router";
+import  Config  from "../utils/config"
+const ip_addr= Config.ip_addr;
 
 export default {
   components: {
@@ -51,7 +53,7 @@ export default {
 
     axios
       .post(
-        "http://localhost:3080/api/authenticate",
+        `http://${ip_addr}:3080/api/authenticate`,
         qs.stringify({
           Authorization: token,
         })
