@@ -54,6 +54,7 @@ class _RoomListState extends State<RoomList> {
           var message = Message.fromJson(data);
           message.content = await Aes256Gcm.decrypt(room, message.content);
           room.messages.add(message);
+          room.lastMessage = message.content;
           streamController.add(message);
           reload = true;
         }
