@@ -253,6 +253,7 @@ export default {
 				room.password = response.data.password
 				room.lastMessage = this.fetchedMessages[this.fetchedMessages.length - 1] || null;
 				this.roomsLoadedCount += 1;
+				this.ErrorRoom = null
 
 				roomList.push(room);
 
@@ -260,6 +261,7 @@ export default {
 				this.rooms = this.rooms.concat(roomList);
 				this.roomsLoaded = true;
 				this.loadingRooms = false
+				this.addNewRoom = false;
 
 				if (!this.rooms.length) {
 					this.loadingRooms = false
@@ -268,7 +270,14 @@ export default {
 				this.$soketio.emit('join', { roomId: room.roomId, userId: this.currentUserId });
 
 				this.fetchMessages({room, options: {reset: true}})
-			});
+			}).catch((error) => {
+					this.ErrorRoom = error.response.data.message;
+					this.resetForms();
+			this.addNewRoom = true;
+			this.joinRoom = false;
+
+
+				});
 		},
 
 		fetchMessages({ room, options = {} }) {
@@ -362,10 +371,8 @@ export default {
 
 		async createRoom() {
 			console.log("createRoom");
+			console.log(this.joinRoom)
 			if (this.joinRoom) {
-				this.disableForm = true
-				this.joinRoom = false;
-				this.addNewRoom = false;
 				this.getRoom();
 				return;
 			}
@@ -381,6 +388,9 @@ export default {
 						console.log("non trovato");
 						return;
 					}
+					this.disableForm = true
+				this.joinRoom = false;
+				this.addNewRoom = false;
 					let userId = this.currentUserId;
 					let username = res.data.username;
 					let room = {};
@@ -405,7 +415,7 @@ export default {
 						// 	new Date(),
 						// )
 					}
-					this.ErrorRoom = ""
+					this.ErrorRoom = null
 					this.rooms.push(room);
 					this.roomsLoadedCount += 1;
 					this.roomsLoaded = true
@@ -417,7 +427,7 @@ export default {
 				.catch((error) => {
 					this.ErrorRoom = error.response.data.message
 					this.addRoom()
-
+					this.joinRoom = false;
 				})
 
 			this.addNewRoom = false
