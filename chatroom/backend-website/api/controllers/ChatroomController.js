@@ -53,7 +53,7 @@ const createRoom = (req, res) => {
                             .then(room => {
                                 res.json({
                                     message: 'room Added Successfully!'
-                                    , iv: iv_aes, username: user.user, password: password_derivative, chatId: chat_id
+                                    , iv: iv_aes, username: user.user, password: password_derivative, chatId: chat_id,timestamp:room.createdAt
                                 })
                             })
                             .catch(err => {
