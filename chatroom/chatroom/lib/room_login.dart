@@ -77,8 +77,12 @@ class _RoomLoginState extends State<RoomLogin> {
       Room r = Room.fromJson(roomTemp);
       for (var message in roomTemp['messages']) {
         message = Message.fromJson(message);
-        message.content = await Aes256Gcm.decrypt(r, message.content);
-        messages.add(message);
+        try {
+          message.content = await Aes256Gcm.decrypt(r, message.content);
+          messages.add(message);
+        } catch (e) {
+          print(e);
+        }
       }
       r.messages = messages;
       r.messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));

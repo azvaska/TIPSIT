@@ -77,8 +77,6 @@ const getRoom = (req, res) => {
     let password = req.body.password;
     Room.findOne({ name: name_r }).then(async (room) => {
         if (room) {
-            console.log(room)
-
             const md = crypto.createHash('sha256');
             md.update(password + " " + name_r);
             const password_derivative = md.digest('hex');
@@ -122,9 +120,8 @@ const getRoom = (req, res) => {
 
                                 let h = response.data.result.block.header.height;
                                 if (h == blocks[blocks.length - 1]) {
-                                    setTimeout(() => {
-                                        resolve();
-                                    }, 300);
+                                    resolve();
+
                                 }
                             })
                             .catch((err) => {
@@ -148,35 +145,13 @@ const getRoom = (req, res) => {
             else {
                 res.status(400).json({ message: "Wrong password!" })
             }
+        }else{
+            res.status(400).json({ message: "Room not found!" })
         }
     }).catch(err => {
         res.status(400).json({ message: "An error occurred!", error: err.message })
     })
 }
-/*
-const getBlockNumb = (req, res, next) => {
-    let userId = req.body.userId;
-    
-    User.findOne({ userId: userId })
-        .then((user) => {
-            res.JSON({
-                number: user.block.length
-            })
-        })
-        .catch(err => {
-            console.error(err);
-        })
-}
-*/
-// const getMessages = (req, res, next) => {
-//     let userId = req.body.userId;
-//     let roomId = req.body.roomId;
-//     let blocks;
-//     let username;
-//     Room.findOne({ roomId: roomId })
-//         .then((user) => {
-
-// }
 
 module.exports = {
     createRoom, getRoom

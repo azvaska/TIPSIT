@@ -115,13 +115,15 @@ class _ChatState extends State<Chat> {
             ),
             Align(
                 alignment: Alignment.bottomLeft,
-                child: Container(
-                    padding: const EdgeInsets.only(left: 10, bottom: 5, top: 0),
-                    height: 60,
-                    width: double.infinity,
-                    color: Colors.white,
-                    child: InputWidget(
-                        controller: controller, sendMessage: sendMessage))),
+                child: IntrinsicHeight(
+                  child: Container(
+                      padding:
+                          const EdgeInsets.only(left: 10, bottom: 5, top: 0),
+                      width: double.infinity,
+                      color: Colors.white,
+                      child: InputWidget(
+                          controller: controller, sendMessage: sendMessage)),
+                )),
           ],
         ),
       ),

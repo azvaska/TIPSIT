@@ -49,30 +49,11 @@ const login = (req, res, next) => {
                         })
                     }
                     if (result) {
-                        let token = jwt.sign({ id: user.userId, user: user.user }, 'g32hf.239Gamgi3))gmAG(mgoq', { expiresIn: '7d' });
-                        /* TODO RSA pairKey
-                        let buffer = "";
-                        const CRYPTO = require('crypto');
-                        console.log(user.rsa_private.toString('utf8'));
-                        var privateKey = CRYPTO.createPrivateKey({
-                            'key': user.rsa_private.toString('utf8'),
-                            'format': 'pem',
-                            'type': 'pkcs8',
-                            'cipher': 'aes-256-cbc',
-                            'passphrase': password
-                        });
+                        let token = jwt.sign({ id: user.userId, user: user.user }, 'g32hf.239Gamgi3))gmAG(mgoq', { expiresIn: '14d' });
 
-                        var hash = CRYPTO.privateDecrypt({
-                            'key': privateKey,
-                            'passphrase': password,
-                            'cipher': 'aes-256-cbc',
-                            'padding': CRYPTO.constants.RSA_PKCS1_PADDING
-                        }, buffer).toString();
-                        */
                         res.json({
                             userId: user.userId,
-                            //publicKey: user.rsa_pubblic,
-                            //privateKey: hash,
+
                             message: 'Login successful!',
                             token
                         })

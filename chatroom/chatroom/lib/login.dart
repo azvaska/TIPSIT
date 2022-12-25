@@ -5,8 +5,9 @@ import 'package:chatroom/schema/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'config.dart';
+import 'package:jwt_decode/jwt_decode.dart';
 
 // ignore: non_constant_identifier_names
 User? user_authenticated;
@@ -22,8 +23,13 @@ class LoginScreen extends StatelessWidget {
     var userTemp = jsonDecode(response.body);
     userTemp['email'] = data.name;
     if (response.statusCode == 200) {
+      AndroidOptions _getAndroidOptions() => const AndroidOptions(
+            encryptedSharedPreferences: true,
+          );
+      final storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
       // If the server did return a 200 OK response,
       // then parse the JSON.
+      await storage.write(key: "userToken", value: userTemp['token']);
       return User.fromJson(userTemp);
     } else {
       // If the server did not return a 200 OK response,
@@ -61,8 +67,21 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AndroidOptions _getAndroidOptions() => const AndroidOptions(
+          encryptedSharedPreferences: true,
+        );
+    final storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
+    storage.read(key: "userToken").then((value) {
+      if (value != null) {
+        Map<String, dynamic> payload = Jwt.parseJwt(value);
+        user_authenticated = User(token: value, userId: payload['id']);
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (context) => RoomList(user: user_authenticated!),
+        ));
+      }
+    });
     return FlutterLogin(
-      title: 'ECORP',
+      title: 'Secure Chat',
       onLogin: _authUser,
       onSignup: _signupUser,
       onSubmitAnimationCompleted: () {

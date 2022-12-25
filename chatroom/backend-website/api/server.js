@@ -9,7 +9,7 @@ const Room = require('./models/Room');
 const AuthRoute = require('./routes/auth');
 const cors = require('cors');
 const uuid = require('uuid');
-const path_gense = "/mnt/cestino/backup_robba/ProgrammiSviluppo/TIPSIT/chatroom/backend-website/api/genesis.json"
+const path_gense = "./genesis.json"
 const http = require('http').Server(app);
 const io = require('socket.io')(http, {
     cors: {
@@ -40,7 +40,6 @@ io.on('connection', function (socket) {
     });
     socket.on('message', function (data) {
         {
-            console.log(data)
             let messageId = uuid.v4();
             let msg = {
                 _id: `${messageId}`,
@@ -69,7 +68,7 @@ io.on('connection', function (socket) {
                                     .then(x => {
                                         room.block.push(x.height)
                                         room.save()
-                                        .then(sus => {
+                                        .then(_ => {
                                             io.to(data.roomId).emit('new-message', msg);
                                         })
                                         .catch(err => {
@@ -112,31 +111,8 @@ app.use(express.json());
 
 
 app.use('/api', AuthRoute);
-
-let lotionapp = require('lotion')({
-    initialState: { messages: [] },
-    genesisPath: path_gense,
-    rpcPort: 30098,
-    
-    p2pPort: 30099,
-    logTendermint: true,
-    peers: ["894b34acbc0ef6f5e219c0948a3ee79fbd441dac@138.3.243.70:30094","60b8dc9f84ae24e280ba4556f74c419b9afd9487@138.3.243.70:30092"]
-})
-
-
-lotionapp.use((state, tx) => {
-    state.messages.push({
-        _id: tx._id,
-        userId: tx.userId,
-        roomId: tx.roomId,
-        content: tx.content,
-        timestamp: tx.timestamp,
-      })
+http.listen(3000, function () {
+    console.log('listening on *:3000 for socket.io');
 });
+app.listen(PORT, () => console.log(`[INFO] Server listening on port ${PORT}`));
 
-lotionapp.start(3000).then(async ({ GCI }) => {
-    http.listen(3000, function () {
-        console.log('listening on *:3000 for socket.io');
-    });
-    app.listen(PORT, () => console.log(`[INFO] Server listening on port ${PORT}`));
-})

@@ -44,6 +44,11 @@ dependencies:
   cryptography_flutter: ^2.0.2
   intl: ^0.18.0
   convert: ^3.1.1
+  flutter_secure_storage: ^7.0.1
+  jwt_decode: ^0.3.1
+  emoji_picker_flutter: ^1.5.1
+  emoji_selector: ^0.0.5
+  flutter_keyboard_visibility: ^5.4.0
 
 dev_dependencies:
   flutter_test:

@@ -17,15 +17,6 @@ const UserSchema = new Schema({
         type: String,
         unique: true,
     },
-    rsa_pubblic: {
-        type: Buffer
-    },
-    rsa_private: {
-        type: Buffer
-    },
-    block: {
-        type: Array
-    },
 }, {timestamps: true});
 
 const User = mongoose.model('User', UserSchema);

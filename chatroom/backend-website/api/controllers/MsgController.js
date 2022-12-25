@@ -35,50 +35,7 @@ const status = (req, res, next) => {
     })
 }
 
-const send = async (req, res, next) => {
-    let messageId = '1234';
-
-    let { state, send } = await connect(null, {
-        nodes: [`ws://localhost:30092/websocket`,],
-        genesis: require('../genesis.json')
-    })
-
-    await state;
-    
-    await send({
-        _id: `${messageId}`,
-        senderId: `${req.body.senderId}`,
-        destinationId: `${req.body.destinationId}`,
-        content: req.body.content,
-        timestamp: `${Math.floor(new Date().getTime() / 1000)}`,
-    })
-    .then(x => {
-        res.json({
-            message: "mandato messaggio",
-            height: x.height
-        })
-
-        const query = { userId: req.body.senderId };
-
-        User.findOneAndUpdate(query,
-        { "$push": {"block": x.height} },
-        { "new": true, "upsert": true },
-        function (err, managerparent) {
-            if (err) throw err;
-        });
-
-        const query2 = { userId: req.body.destinationId };
-
-        User.findOneAndUpdate(query2, 
-        { "$push": {"block": x.height} },
-        { "new": true, "upsert": true },
-        function (err, managerparent) {
-            if (err) throw err;
-        });
-    })
-    .catch(err => console.log(err));
-}
 
 module.exports = {
-    send, blockchain, abci_info, status
+     blockchain, abci_info, status
 }
