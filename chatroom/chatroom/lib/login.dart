@@ -59,11 +59,42 @@ class LoginScreen extends StatelessWidget {
     }
   }
 
-  Future<String?> _signupUser(SignupData data) {
+  Future<String?> registerUser(SignupData data) async {
+    final response = await http
+        .post(Uri.parse('http://${Settings.ip}:3080/api/register'), body: {
+      "user": data.name,
+      "email": data.name,
+      "password": data.password
+    }).timeout(
+      const Duration(seconds: 4),
+      onTimeout: () {
+        // Time has run out, do what you wanted to do.
+        return http.Response('Error in contecting to the server',
+            408); // Request Timeout response status code
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print("stp");
+      return await _authUser(
+          LoginData(name: data.name ?? "", password: data.password ?? ""));
+    } else {
+      if (response.statusCode == 408) {
+        throw Exception(response.body);
+      }
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load User');
+    }
+  }
+
+  Future<String?> _signupUser(SignupData data) async {
     debugPrint('Signup Name: ${data.name}, Password: ${data.password}');
-    return Future.delayed(loginTime).then((_) {
-      return null;
-    });
+    try {
+      return await registerUser(data);
+    } catch (e) {
+      return e.toString();
+    }
   }
 
   Future<String> _recoverPassword(String name) {
@@ -96,6 +127,7 @@ class LoginScreen extends StatelessWidget {
       title: 'Secure Chat',
       onLogin: _authUser,
       onSignup: _signupUser,
+      userType: LoginUserType.email,
       onSubmitAnimationCompleted: () {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (context) => RoomList(user: user_authenticated!),
