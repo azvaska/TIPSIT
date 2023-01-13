@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const app = express();
-const request = require('request');
 let { connect } = require('lotion')
 const User = require('./models/User.js');
 const Room = require('./models/Room');

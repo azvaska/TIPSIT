@@ -75,7 +75,7 @@ class ChatBubble extends StatelessWidget {
                       : "Sending...",
                   style: Theme.of(context).textTheme.bodyText1!.copyWith(
                       color: isCurrentUser ? Colors.white : Colors.black87,
-                      fontSize: 10),
+                      fontSize: 12),
                 ),
               ],
             ),

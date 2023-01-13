@@ -13,12 +13,15 @@
 			</button>
 			<button class="button-cancel" @click="addNewRoom = false">Cancel</button>
 		</form>
-		<chat-window :height="screenHeight" :theme="theme" :styles="styles" :username-options="userOption"  :current-user-id="currentUserId"
+		<chat-window :height="screenHeight" :theme="theme"
+		:styles="styles" :username-options="userOption"  :current-user-id="currentUserId"
 			:room-id="roomId" :rooms="loadedRooms" :loading-rooms="loadingRooms" :messages="messages"
+			:show-audio="false" :show-files="false"
 			:messages-loaded="messagesLoaded" :rooms-loaded="roomsLoaded" :room-actions="roomActions"
 			:menu-actions="menuActions" :room-message="roomMessage" :templates-text="templatesText"
 			@fetch-messages="fetchMessages" @send-message="sendMessage" @add-room="addRoom"
-			@room-action-handler="menuActionHandler" @menu-action-handler="menuActionHandler">
+			@room-action-handler="menuActionHandler" @menu-action-handler="menuActionHandler"
+			>
 			<!-- <template #emoji-picker="{ emojiOpened, addEmoji }">
 				<button @click="addEmoji({ unicode: '😁' })">
 					{{ emojiOpened }}
@@ -82,6 +85,7 @@ export default {
 			removeRoomId: null,
 			ivStr: '',
 			pwHash: '',
+			
 			removeUserId: '',
 			removeUsers: [],
 			roomActions: [

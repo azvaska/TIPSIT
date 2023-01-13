@@ -19,10 +19,19 @@ class LoginScreen extends StatelessWidget {
   Future<User> fetchUser(LoginData data) async {
     final response = await http.post(
         Uri.parse('http://${Settings.ip}:3080/api/login'),
-        body: {"username": data.name, "password": data.password});
-    var userTemp = jsonDecode(response.body);
-    userTemp['email'] = data.name;
+        body: {"username": data.name, "password": data.password}).timeout(
+      const Duration(seconds: 4),
+      onTimeout: () {
+        // Time has run out, do what you wanted to do.
+        return http.Response('Error in contecting to the server',
+            408); // Request Timeout response status code
+      },
+    );
+    ;
+
     if (response.statusCode == 200) {
+      var userTemp = jsonDecode(response.body);
+      userTemp['email'] = data.name;
       AndroidOptions _getAndroidOptions() => const AndroidOptions(
             encryptedSharedPreferences: true,
           );
@@ -32,19 +41,23 @@ class LoginScreen extends StatelessWidget {
       await storage.write(key: "userToken", value: userTemp['token']);
       return User.fromJson(userTemp);
     } else {
+      if (response.statusCode == 408) {
+        throw Exception(response.body);
+      }
       // If the server did not return a 200 OK response,
       // then throw an exception.
       throw Exception('Failed to load User');
     }
   }
 
-  Future<String?> _authUser(LoginData data) {
+  Future<String?> _authUser(LoginData data) async {
     debugPrint('Name: ${data.name}, Password: ${data.password}');
-
-    return fetchUser(data).then((value) {
-      user_authenticated = value;
+    try {
+      user_authenticated = await fetchUser(data);
       return null;
-    });
+    } catch (e) {
+      return e.toString();
+    }
   }
 
   Future<String?> _signupUser(SignupData data) {

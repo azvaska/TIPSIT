@@ -19,7 +19,6 @@ class InputWidget extends StatefulWidget {
 
 class _InputWidgetState extends State<InputWidget> {
   bool showEmojiPicker = false;
-  late StreamSubscription<bool> keyboardSubscription;
   _onEmojiSelected(Category? c, Emoji emoji) {
     widget.controller
       ..text += emoji.emoji
@@ -54,7 +53,6 @@ class _InputWidgetState extends State<InputWidget> {
 
   @override
   void dispose() {
-    keyboardSubscription.cancel();
     super.dispose();
   }
 
