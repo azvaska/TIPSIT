@@ -97,43 +97,45 @@ const getRoom = (req, res) => {
                     })
                     }
                 console.log(blocks)
-                const promises = new Promise((resolve, reject) => {
+                const promises = new Promise(async (resolve, reject)  =>{
+                    var messages_sus = [];
                     for (let i = 0; i < blocks.length; i++) {
-                        axios.get("http://localhost:30098/block?", {
-                            params: {
-                                height: blocks[i]
+                        try {
+                            var response= await axios.get("http://localhost:30098/block?", {
+                                params: {
+                                    height: blocks[i]
+                                }
+                            })
+                            if (response.status !== 200) {
+                                console.log("Error: " + response)
+                                return;
                             }
-                        })
-                            .then((response) => {
-                                console.log("GOT BLOCK")
-                                if (response.status !== 200) {
-                                    console.log("Error: " + response)
-                                    return;
-                                }
+    
+                            let data = response.data.result.block.data.txs[0];
+                            let buff = Buffer.from(data, 'base64').toString();
+                            let toAdd = JSON.parse(buff.substring(4, buff.length - 4));
+                            // toAdd.username = username;
+                            messages_sus.push(toAdd);
+                            let h = response.data.result.block.header.height;
+                            if (h == blocks[blocks.length - 1]) {
+                                messages=messages_sus;
+                                resolve(messages_sus);
+                                return messages_sus;
+    
+                            }
+                        } catch (error) {
+                            
+                        }
 
-                                let data = response.data.result.block.data.txs[0];
-                                let buff = Buffer.from(data, 'base64').toString();
-                                let toAdd = JSON.parse(buff.substring(4, buff.length - 4));
-                                // toAdd.username = username;
-                                messages.push(toAdd);
-                                console.log(toAdd)
-
-                                let h = response.data.result.block.header.height;
-                                if (h == blocks[blocks.length - 1]) {
-                                    resolve();
-
-                                }
-                            })
-                            .catch((err) => {
-                                console.log(err)
-                            })
                     }
+                    return messages_sus;
                 });
 
-                promises.then(() => {
+                promises.then((messages_su) => {
                     messages.sort((a, b) => {
-                        return b.timestamp - a.timestamp
+                        return a.timestamp - b.timestamp
                     });
+
                     res.json({
                         message: 'Found the room Successfully!'
                         , iv: room.iv, password: room.password, chatId: room.roomid,

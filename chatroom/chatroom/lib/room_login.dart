@@ -46,7 +46,6 @@ class _RoomLoginState extends State<RoomLogin> {
       // If the server did not return a 200 OK response,
       // then throw an exception.
       return Future.error(Exception(roomTemp["message"]));
-      ;
     }
   }
 
@@ -58,7 +57,6 @@ class _RoomLoginState extends State<RoomLogin> {
       "name": nameController.text
     });
     var roomTemp = jsonDecode(response.body);
-    print(roomTemp);
     if (response.statusCode == 200) {
       if (widget.checkRoomExists(roomTemp['chatId'])) {
         return Future.error(Exception('Room already joined'));
@@ -81,11 +79,12 @@ class _RoomLoginState extends State<RoomLogin> {
           message.content = await Aes256Gcm.decrypt(r, message.content);
           messages.add(message);
         } catch (e) {
-          print(e);
+          message.content = "Error in decrypting message";
+          messages.add(message);
         }
       }
       r.messages = messages;
-      r.messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      //r.messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
       r.lastMessage =
           messages.isEmpty ? "Stanza creata!" : messages.last.content;

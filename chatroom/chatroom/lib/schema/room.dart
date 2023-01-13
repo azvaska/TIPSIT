@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 
-import 'message.dart';
 import 'package:convert/convert.dart';
 
 class Room<T> {

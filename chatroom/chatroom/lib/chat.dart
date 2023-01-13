@@ -5,10 +5,7 @@ import 'package:chatroom/schema/room.dart';
 import 'package:chatroom/schema/user.dart';
 import 'package:chatroom/widgets/chatbubble.dart';
 import 'package:chatroom/widgets/inputwidget.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:socket_io_client/src/socket.dart';
 
 import 'cripto.dart';
@@ -37,7 +34,6 @@ class _ChatState extends State<Chat> {
 
   @override
   void initState() {
-    // TODO: implement initState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       scrollController.animateTo(scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 1),
@@ -55,7 +51,6 @@ class _ChatState extends State<Chat> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     sus!.cancel();
     super.dispose();
   }

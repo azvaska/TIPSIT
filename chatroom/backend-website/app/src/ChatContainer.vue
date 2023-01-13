@@ -20,7 +20,6 @@
 			:messages-loaded="messagesLoaded" :rooms-loaded="roomsLoaded" :room-actions="roomActions"
 			:menu-actions="menuActions" :room-message="roomMessage" :templates-text="templatesText"
 			@fetch-messages="fetchMessages" @send-message="sendMessage" @add-room="addRoom"
-			@room-action-handler="menuActionHandler" @menu-action-handler="menuActionHandler"
 			>
 			<!-- <template #emoji-picker="{ emojiOpened, addEmoji }">
 				<button @click="addEmoji({ unicode: '😁' })">
@@ -164,7 +163,7 @@ export default {
 				username : data.userId,
 			};
 			this.fetchedMessages.push(message);
-			room.lastMessage = message
+			room.lastMessage = this.formatMessage(room, message)
 			this.fetchMessages({room ,options: {reset: true}})
 		})
 		this.fetchRooms()
@@ -248,14 +247,14 @@ export default {
 
 				room.roomId = response.data.chatId;
 				room.roomName = this.RoomName;
-				room.timestamp = `${new Date().getHours()}:${new Date().getMinutes()}`;
+				room.timestamp = new Date().toISOString();
 				room.users = user_room
 
 				room.avatar = 'https://www.meme-arsenal.com/memes/b6a18f0ffd345b22cd219ef0e73ea5fe.jpg';
 				room.index = 0;
 				room.iv = fromBinary(response.data.iv)
 				room.password = response.data.password
-				room.lastMessage = this.fetchedMessages[this.fetchedMessages.length - 1] || null;
+				room.lastMessage = this.formatMessage(room, this.fetchedMessages[this.fetchedMessages.length - 1] || null) ;
 				this.roomsLoadedCount += 1;
 				this.ErrorRoom = null
 
@@ -327,7 +326,7 @@ export default {
 					seconds: date.getSeconds(),
 					seen: true,
 					timestamp: `${date.getHours()}:${date.getMinutes()}`,
-					date: `${date.getDay()}/${date.getMonth()}/${date.getFullYear()}`,
+					date: date.toISOString().split('T')[0],
 					// avatar: senderUser ? senderUser.avatar : null,
 					distributed: true
 				}
@@ -356,16 +355,6 @@ export default {
 			
 		},
 
-		menuActionHandler({ action, roomId }) {
-			switch (action.name) {
-				case 'inviteUser':
-					return this.inviteUser(roomId)
-				case 'removeUser':
-					return this.removeUser(roomId)
-				case 'deleteRoom':
-					return this.deleteRoom(roomId)
-			}
-		},
 
 		addRoom() {
 			console.log("addRoom");
@@ -400,7 +389,7 @@ export default {
 					let room = {};
 					room.roomId = res.data.chatId;
 					room.roomName = this.RoomName;
-					room.timestamp = `${new Date().getHours()}:${new Date().getMinutes()}`;
+					room.timestamp = new Date().toISOString();
 					room.iv = fromBinary(res.data.iv)
 					room.password = res.data.password
 					room.users = [
@@ -412,12 +401,12 @@ export default {
 
 					room.avatar = 'https://www.meme-arsenal.com/memes/b6a18f0ffd345b22cd219ef0e73ea5fe.jpg';
 					room.index = 0;
+					var date=new Date();
 					room.lastMessage = {
 						height: 0,
 						content: 'Stanza creata!',
-						// timestamp: formatTimestamp(
-						// 	new Date(),
-						// )
+						timestamp: `${date.getDay()}/${date.getMonth()}/${date.getFullYear()}`,
+						seen: true,
 					}
 					this.ErrorRoom = null
 					this.rooms.push(room);

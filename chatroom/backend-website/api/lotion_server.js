@@ -7,7 +7,7 @@ let lotionapp = require('lotion')({
     rpcPort: 30098,
     p2pPort: 30099,
     logTendermint: true,
-    peers: ["9b9b902550cffc90729e116389771cd3aa22cede@172.18.5.11:30094","b6dcc72a2631fac1a0816cc0154275bdfca1480e@172.18.5.10:30092"]
+    peers: ["39cf935eb23539af6506d3f5cdfbcc7af602bdb9@138.3.243.70:30094","8f08150f9c1300af4d8b4bccd7a0c1e2be5c6895@138.3.243.70:30092"]
 })
 
 

@@ -1,7 +1,3 @@
-import 'package:chatroom/schema/room.dart';
-import 'package:flutter/material.dart';
-import 'package:chatroom/cripto.dart';
-
 class Message {
   String id;
   String roomId;

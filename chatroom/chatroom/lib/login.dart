@@ -27,7 +27,6 @@ class LoginScreen extends StatelessWidget {
             408); // Request Timeout response status code
       },
     );
-    ;
 
     if (response.statusCode == 200) {
       var userTemp = jsonDecode(response.body);

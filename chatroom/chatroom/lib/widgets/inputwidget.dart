@@ -1,10 +1,5 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
-import 'package:emoji_selector/emoji_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 
 class InputWidget extends StatefulWidget {
@@ -37,8 +32,6 @@ class _InputWidgetState extends State<InputWidget> {
   void initState() {
     var keyboardVisibilityController = KeyboardVisibilityController();
     // Query
-    print(
-        'Keyboard visibility direct query: ${keyboardVisibilityController.isVisible}');
 
     // Subscribe
 
@@ -49,6 +42,7 @@ class _InputWidgetState extends State<InputWidget> {
         });
       }
     });
+    super.initState();
   }
 
   @override
@@ -66,7 +60,7 @@ class _InputWidgetState extends State<InputWidget> {
       child: Column(
         children: [
           const Spacer(),
-          Container(
+          SizedBox(
               height: 66.0,
               // color: Colors.blue,
               child: Row(

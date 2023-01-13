@@ -1,12 +1,11 @@
 import 'dart:async';
 
 import 'package:chatroom/config.dart';
+import 'package:chatroom/login.dart';
 import 'package:chatroom/room_login.dart';
 import 'package:chatroom/schema/user.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:socket_io_client/socket_io_client.dart';
 import 'chat.dart';
@@ -39,12 +38,11 @@ class _RoomListState extends State<RoomList> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     socket.onConnect((_) {
-      print('connect SUSSAAAAAAAAAAa');
       for (var room in rooms) {
-        socket.emit('join', widget.user.userId);
+        socket.emit(
+            'join', {'userId': widget.user.userId, 'roomId': room.roomid});
       }
     });
 
@@ -149,6 +147,21 @@ class _RoomListState extends State<RoomList> {
               })
             ],
           )),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              AndroidOptions _getAndroidOptions() => const AndroidOptions(
+                    encryptedSharedPreferences: true,
+                  );
+              final storage =
+                  FlutterSecureStorage(aOptions: _getAndroidOptions());
+              storage.delete(key: "userToken").then((_) {
+                Navigator.of(context).pushReplacement(MaterialPageRoute(
+                    builder: (context) => const LoginScreen()));
+              });
+            },
+            backgroundColor: Colors.blue,
+            child: const Icon(Icons.logout),
+          ),
         ));
   }
 }
