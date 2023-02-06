@@ -31,7 +31,8 @@ class TodoItem extends StatelessWidget {
       onLongPress: (() {
         onTodoDelete(todo);
       }),
-      leading: CircleAvatar(child: Text(todo.name[0])),
+      leading:
+          CircleAvatar(backgroundColor: todo.color, child: Text(todo.name[0])),
       title: Text(todo.name, style: _getTextStyle(todo.checked)),
     );
   }

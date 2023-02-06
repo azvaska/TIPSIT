@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'model.dart';
 import 'widgets.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 void main() {
   runApp(
@@ -38,32 +39,40 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _textFieldController = TextEditingController();
-  final List<Todo> _todos = <Todo>[];
-
-  void _handleTodoChange(Todo todo) {
-    setState(() {
-      todo.checked = !todo.checked;
-    });
-  }
 
   Future<void> _displayDialog(TodoList todoList) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
+        Color currentColor = Colors.red;
         return AlertDialog(
           title: const Text('add todo item'),
-          content: TextField(
-            controller: _textFieldController,
-            decoration: const InputDecoration(hintText: 'type here ...'),
+          content: Column(
+            children: [
+              TextField(
+                controller: _textFieldController,
+                decoration: const InputDecoration(hintText: 'type here ...'),
+              ),
+              ColorPicker(
+                pickerColor: currentColor, //default color
+                onColorChanged: (Color color) {
+                  //on color picked
+                  currentColor = color;
+                },
+              )
+            ],
           ),
           actions: <Widget>[
             TextButton(
               child: const Text('Add'),
               onPressed: () {
+                if (_textFieldController.text.isEmpty) return;
                 Navigator.of(context).pop();
-                todoList.addTodo(
-                    Todo(name: _textFieldController.text, checked: false));
+                todoList.addTodo(Todo(
+                    name: _textFieldController.text,
+                    checked: false,
+                    color: currentColor));
                 _textFieldController.clear();
               },
             ),
@@ -87,7 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
             itemBuilder: (context, index) {
               return TodoItem(
                 todo: todoList.todos[index],
-                onTodoChanged: _handleTodoChange,
+                onTodoChanged: todoList.handleTodoChange,
                 onTodoDelete: todoList.toggleTodo,
               );
             }),

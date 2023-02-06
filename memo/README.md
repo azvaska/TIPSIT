@@ -1,55 +1,60 @@
-# am032_todo_list
-
-**[221211]** L'app è completamente rifatta. Usiamo una `StatefulWidget` il cui stato è dato da
-```dart
-final TextEditingController _textFieldController = TextEditingController();
-final List<Todo> _todos = <Todo>[];
-```
+# am069_todo_list
+Questo progetto e' un upgrade con la centralizzatone dello stato di [questa](https://gitlab.com/divino.marchese/flutter/-/tree/master/am032_todo_list) app <br>
 
 ## model
 
 La classe 
 ```dart
 class Todo {
-  Todo({required this.name, required this.checked});
+  Todo({required this.name, required this.checked, required this.color});
   final String name;
   bool checked;
+  Color color;
 }
 ```
 definisce il *model* per gli *item*.
 
-## dialog
-
-Il metodo `showDialog<T>` permette, appunto di mostrare un *dialog*
-```
-barrierDismissible: false,
-```
-sta ad indicare che il *dialog* resta visibile anche se tocchiamo fuori da esso. La classe `AlertDialog` è la classe *basic* per i *dialog* in *Material Design*, invitiamo alla lettura delle API [qui](https://api.flutter.dev/flutter/material/AlertDialog-class.html). L'istruzione
+## la Classe che tiene lo stato
 ```dart
-Navigator.pop(context);
+class TodoList with ChangeNotifier {
+  final List<Todo> _todos = [];
+
+  List<Todo> get todos => _todos;
+
+  void addTodo(Todo todo) {
+    _todos.add(todo);
+    notifyListeners();
+  }
+
+  void handleTodoChange(Todo todo, {Color? color}) {
+    if (color != null) {
+      todo.color = color;
+    } else {
+      todo.checked = !todo.checked;
+    }
+    notifyListeners();
+  }
+
+  void toggleTodo(Todo todo) {
+    final index = _todos.indexOf(todo);
+    _todos.removeAt(index);
+    notifyListeners();
+  }
+}
+
 ```
-l'abbiamo vista all'opera col *router*.
-
-## la lista
-
-**NB** Questo è un esempio di come agire sullo stato di un *widget* con stato passando ai discendenti un metodo come argom,ento! Al posto del *builder* potremmo scrivere
+# Color picker  
+Inoltre e' stata aggiunta la possibilita di impostare un colore della memo
 ```dart
-ListView(
-    padding: const EdgeInsets.symmetric(vertical: 8.0),
-    children: _todos.map((Todo todo) {
-        return TodoItem(
-            todo: todo,
-            onTodoChanged: _handleTodoChange,
-            onTodoDelete: _handleTodoDelete,
-        );
-    }).toList(),
-))
+ColorPicker(
+                pickerColor: currentColor, //default color
+                onColorChanged: (Color color) {
+                  //on color picked
+                  currentColor = color;
+                },
+              )
 ```
+# References
 
-## l'item
-
-Legare a *widget* di uno stesso tipo valori di `key` differenti è importante, qui scegliamo
-```dart
-: super(key: ObjectKey(todo));
-```
-Per passare le azioni al singolo elemento della lista creiaomo una `StateLessWidget` e costruiamo dentro un `ListTile`.
+[Provider](https://pub.dev/packages/provider)
+[flutter_colorpicker](https://pub.dev/packages/flutter_colorpicker)
