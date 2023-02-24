@@ -19,7 +19,7 @@ class InsertMap extends StatefulWidget {
 
 class _InsertMapState extends State<InsertMap> {
   final _mapController = MapController();
-  List<Marker> _markers = [];
+  List<MapMarker> _markers = [];
   double _rotation = 0.0;
   LatLng base_position = LatLng(46.32443, 12.234);
   final PopupController _popupLayerController = PopupController();
@@ -38,23 +38,18 @@ class _InsertMapState extends State<InsertMap> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _markers = [];
-    // _markers = widget.stopList.entries
-    //     .map((entry) => MapMarker(
-    //           lat: entry.value.lat,
-    //           lng: entry.value.lat,
-    //           name: entry.key,
-    //         ))
-    //     .toList();
-    _markers.add(
-      Marker(
-        anchorPos: AnchorPos.align(AnchorAlign.top),
-        point: LatLng(45.859661, 45.305135),
-        height: 80,
-        width: 90,
-        builder: (BuildContext ctx) => const Icon(Icons.location_pin),
-      ),
-    );
+    _markers = widget.stopList.entries
+        .map((entry) => MapMarker(
+              lat: entry.value.lat,
+              lng: entry.value.lng,
+              name: entry.key,
+            ))
+        .toList();
+    _markers.add(MapMarker(
+      lat: 46.32443,
+      lng: 12.234,
+      name: "idro",
+    ));
   }
 
   Widget build(BuildContext context) {
@@ -63,9 +58,8 @@ class _InsertMapState extends State<InsertMap> {
         MediaQuery.of(context).padding.top -
         MediaQuery.of(context).padding.bottom;
 
-    return Expanded(
-      flex: 3,
-      // height: availableHeight * 0.59,
+    return SizedBox(
+      height: availableHeight * 0.59,
       child: FlutterMap(
         mapController: _mapController,
         options: MapOptions(
@@ -78,49 +72,47 @@ class _InsertMapState extends State<InsertMap> {
               _rotation = _mapController.rotation;
             });
           },
-          // onTap: (_, __) => _popupLayerController.hideAllPopups(),
+          onTap: (_, __) => _popupLayerController.hideAllPopups(),
         ),
         children: [
           TileLayer(
             urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            userAgentPackageName: 'dev.ilbug.com',
+            userAgentPackageName: 'devsd.ilbug.com',
           ),
-          // PopupMarkerLayerWidget(
-          //   options: PopupMarkerLayerOptions(
-          //     markerCenterAnimation: const MarkerCenterAnimation(),
-          //     markers: _markers,
-          //     popupSnap: PopupSnap.markerCenter,
-          //     popupController: _popupLayerController,
-          //     popupBuilder: (BuildContext context, Marker marker) {
-          //       if (marker is MapMarker) {
-          //         return MapCardPopup(marker.name);
-          //       }
-          //       return const Icon(
-          //         Icons.error,
-          //         size: 90,
-          //       );
-          //     },
-          //     markerRotateAlignment:
-          //         PopupMarkerLayerOptions.rotationAlignmentFor(
-          //       AnchorAlign.top,
-          //     ),
-          //     popupAnimation: const PopupAnimation.fade(
-          //         duration: Duration(milliseconds: 700)),
-          //     markerTapBehavior: MarkerTapBehavior.togglePopupAndHideRest(),
-          //     onPopupEvent: (event, selectedMarkers) {
-          //       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          //       ScaffoldMessenger.of(context).showSnackBar(
-          //         SnackBar(
-          //           content: Text(event.runtimeType.toString()),
-          //           duration: const Duration(seconds: 1),
-          //         ),
-          //       );
-          //     },
-          //   ),
-          // ),
-          MarkerLayer(
-            markers: _markers,
+          PopupMarkerLayerWidget(
+            options: PopupMarkerLayerOptions(
+              markerCenterAnimation: const MarkerCenterAnimation(),
+              markers: _markers,
+              popupSnap: PopupSnap.markerCenter,
+              popupController: _popupLayerController,
+              popupBuilder: (BuildContext context, Marker marker) {
+                if (marker is MapMarker) {
+                  return MapCardPopup(marker.name);
+                }
+                return const Icon(
+                  Icons.error,
+                  size: 90,
+                );
+              },
+              markerRotateAlignment:
+                  PopupMarkerLayerOptions.rotationAlignmentFor(
+                AnchorAlign.top,
+              ),
+              popupAnimation: const PopupAnimation.fade(
+                  duration: Duration(milliseconds: 700)),
+              markerTapBehavior: MarkerTapBehavior.togglePopupAndHideRest(),
+              onPopupEvent: (event, selectedMarkers) {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(event.runtimeType.toString()),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+              },
+            ),
           ),
+          // MarkerLayer(markers: _markers),
           PolylineLayer(polylines: [
             Polyline(
               points: widget.stopList.entries
@@ -184,7 +176,7 @@ class MapMarker extends Marker {
           anchorPos: AnchorPos.align(AnchorAlign.top),
           builder: (BuildContext ctx) {
             print("DIOAN");
-            return Icon(Icons.location_pin, size: 40);
+            return const Icon(Icons.location_pin, size: 40);
           },
         );
 }
