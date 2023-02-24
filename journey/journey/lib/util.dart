@@ -8,6 +8,6 @@ String address_serializer(Placemark placeMark) {
   String postalCode = placeMark.postalCode!;
   String country = placeMark.country!;
   String addressStr =
-      "${name} ${ncivico}, ${locality}, ${administrativeArea} ${postalCode}, ${country}";
+      "$name $ncivico, $locality, $administrativeArea $postalCode, $country";
   return addressStr;
 }

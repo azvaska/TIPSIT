@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
@@ -21,8 +23,8 @@ class InsertTrip extends StatefulWidget {
 }
 
 class _InsertTripState extends State<InsertTrip> {
-  List<Stop> stops = [];
-  Trip? currentTrip = null;
+  LinkedHashMap<String, Stop> stops = LinkedHashMap<String, Stop>();
+  Trip? currentTrip;
   late TripStopProvider tripStopDaoProvider;
   TextEditingController textController = TextEditingController();
   double current_lat = 45.4869;
@@ -46,10 +48,12 @@ class _InsertTripState extends State<InsertTrip> {
       child: Scaffold(
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            for (var i = 0; i < stops.length; i++) {
-              await tripStopDaoProvider.insertTripStop(
-                  TripStop(trip_id: currentTrip!.id!, stop_id: stops[i].id!));
-            }
+            stops.forEach((key, value) async {
+              await tripStopDaoProvider.insertTripStop(TripStop(
+                  trip_id: currentTrip!.id!,
+                  stop_id: value.id!,
+                  name_stop: key));
+            });
             Navigator.pop(context);
           },
           backgroundColor: Colors.green,
@@ -59,6 +63,7 @@ class _InsertTripState extends State<InsertTrip> {
           children: [
             Row(
               children: [
+                const Text("Trip Name:"),
                 Container(
                   padding: const EdgeInsets.only(left: 5),
                   width: 200,
@@ -68,22 +73,11 @@ class _InsertTripState extends State<InsertTrip> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.search),
+                  icon: const Icon(Icons.check),
                   onPressed: () async {
-                    List<Location> locations = await locationFromAddress(
-                        textController.text,
-                        localeIdentifier: "IT");
-                    var addresses = await placemarkFromCoordinates(
-                        locations[0].latitude, locations[0].longitude);
-                    Placemark placeMark = addresses[0];
-
-                    String addressStr = address_serializer(placeMark);
-
                     setState(() {
-                      stops.add(Stop(
-                          lat: locations[0].latitude,
-                          lng: locations[0].longitude,
-                          address: addressStr));
+                      currentTrip = Trip(
+                          name: textController.text, updated: DateTime.now());
                     });
 
                     print(current_lng);
@@ -91,55 +85,49 @@ class _InsertTripState extends State<InsertTrip> {
                 ),
               ],
             ),
-            Text("Stops for this Trip:"),
+            TextButton(
+              child: const Text(
+                'Add Stop',
+                style: TextStyle(fontSize: 20.0),
+              ),
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute<DataPass>(
+                  builder: (BuildContext context) {
+                    return const ManageStop();
+                  },
+                )).then((value) => {
+                      if (value != null)
+                        {
+                          setState(() {
+                            stops[value.name] = value.stop;
+                          })
+                        }
+                    });
+              },
+            ),
+            // const Text("Stops for this Trip:"),
             Expanded(
               child: ListView.builder(
                 shrinkWrap: true,
                 itemCount: stops.length,
                 itemBuilder: (context, index) => ListTile(
-                    title: Text("${stops[index].address},${stops[index].lng}"),
+                    title: Text(
+                        "${stops.keys.elementAt(index)}: ${stops.values.elementAt(index).address}"),
                     subtitle: const Text('Click here to edit'),
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute<int>(
+                      Navigator.push(context, MaterialPageRoute<DataPass>(
                         builder: (BuildContext context) {
                           return ManageStop(stop: stops[index]);
                         },
-                      )).then((value) => print(value));
+                      )).then((value) => {
+                            if (value != null)
+                              {
+                                setState(() {
+                                  stops[value.name] = value.stop;
+                                })
+                              }
+                          });
                     }),
-              ),
-            ),
-            Text("Saved Stops in the db:"),
-            Expanded(
-              child: FutureBuilder(
-                future: tripStopDaoProvider.getStops(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Text('Error: ${snapshot.error}'),
-                      );
-                    }
-                    final stops = snapshot.data;
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: stops!.length,
-                      itemBuilder: (context, index) => ListTile(
-                          title: Text(stops[index].lat.toString()),
-                          subtitle: const Text('Click here to edit'),
-                          onTap: () {
-                            Navigator.push(context, MaterialPageRoute<int>(
-                              builder: (BuildContext context) {
-                                return ManageStop(stop: stops[index]);
-                              },
-                            )).then((value) => print(value));
-                          }),
-                    );
-                  } else {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                },
               ),
             ),
             InsertMap(

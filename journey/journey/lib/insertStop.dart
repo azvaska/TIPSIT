@@ -23,12 +23,21 @@ class ManageStop extends StatefulWidget {
   State<ManageStop> createState() => _ManageStopState();
 }
 
+class DataPass {
+  final String name;
+  final Stop stop;
+  DataPass(this.name, this.stop);
+}
+
 class _ManageStopState extends State<ManageStop> {
   List<Marker> markers = [];
   TextEditingController textController = TextEditingController();
+  TextEditingController textNameController = TextEditingController();
+
   late double current_lat;
   late double current_lng;
   String address = "";
+  String name = "";
   double _rotation = 0;
   @override
   void initState() {
@@ -61,17 +70,23 @@ class _ManageStopState extends State<ManageStop> {
             var addresses =
                 await placemarkFromCoordinates(current_lat, current_lng);
             String addressStr = address_serializer(addresses[0]);
+            Stop? stop;
+
             if (widget.stop != null) {
               widget.stop!.lat = current_lat;
               widget.stop!.lng = current_lng;
 
               widget.stop!.address = addressStr;
               await tripStopDaoProvider.updateStop(widget.stop!);
+              stop = widget.stop;
             } else {
-              int stopId = await tripStopDaoProvider.insertStop(Stop(
-                  lat: current_lat, lng: current_lng, address: addressStr));
+              // add search for an existing stop
+              stop =
+                  Stop(lat: current_lat, lng: current_lng, address: addressStr);
+              int stopId = await tripStopDaoProvider.insertStop(stop);
             }
-            Navigator.pop(context);
+            // ignore: use_build_context_synchronously
+            Navigator.pop(context, DataPass(textNameController.text, stop!));
           },
           backgroundColor: Colors.green,
           child: const Icon(Icons.check),
@@ -80,8 +95,25 @@ class _ManageStopState extends State<ManageStop> {
           children: [
             Row(
               children: [
+                const Text("Name for this trip:"),
                 Container(
-                  padding: EdgeInsets.only(left: 5),
+                  padding: const EdgeInsets.only(left: 5),
+                  width: 180,
+                  child: TextField(
+                    controller: textNameController,
+                    maxLines: null,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.check),
+                  onPressed: () async {},
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.only(left: 5),
                   width: 80,
                   child: TextField(
                     controller: textController,

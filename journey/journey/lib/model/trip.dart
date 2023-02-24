@@ -57,6 +57,8 @@ class Trip {
 class TripStop {
   int trip_id;
   int stop_id;
+  String name_stop;
 
-  TripStop({required this.trip_id, required this.stop_id});
+  TripStop(
+      {required this.trip_id, required this.stop_id, required this.name_stop});
 }
