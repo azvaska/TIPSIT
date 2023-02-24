@@ -5,6 +5,7 @@ import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:journey/tripprovider.dart';
+import 'package:journey/util.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:geocoding/geocoding.dart';
@@ -57,14 +58,18 @@ class _ManageStopState extends State<ManageStop> {
       child: Scaffold(
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
+            var addresses =
+                await placemarkFromCoordinates(current_lat, current_lng);
+            String addressStr = address_serializer(addresses[0]);
             if (widget.stop != null) {
               widget.stop!.lat = current_lat;
               widget.stop!.lng = current_lng;
 
+              widget.stop!.address = addressStr;
               await tripStopDaoProvider.updateStop(widget.stop!);
             } else {
-              int stopId = await tripStopDaoProvider.insertStop(
-                  Stop(lat: current_lat, lng: current_lng, address: address));
+              int stopId = await tripStopDaoProvider.insertStop(Stop(
+                  lat: current_lat, lng: current_lng, address: addressStr));
             }
             Navigator.pop(context);
           },

@@ -6,6 +6,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:journey/insertMap.dart';
 import 'package:journey/insertStop.dart';
 import 'package:journey/tripprovider.dart';
+import 'package:journey/util.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:geocoding/geocoding.dart';
@@ -13,8 +14,8 @@ import 'package:geocoding/geocoding.dart';
 import 'model/trip.dart';
 
 class InsertTrip extends StatefulWidget {
-  const InsertTrip({super.key});
-
+  const InsertTrip({super.key, this.trip});
+  final Trip? trip;
   @override
   State<InsertTrip> createState() => _InsertTripState();
 }
@@ -60,7 +61,7 @@ class _InsertTripState extends State<InsertTrip> {
               children: [
                 Container(
                   padding: const EdgeInsets.only(left: 5),
-                  width: 80,
+                  width: 200,
                   child: TextField(
                     controller: textController,
                     maxLines: null,
@@ -72,39 +73,42 @@ class _InsertTripState extends State<InsertTrip> {
                     List<Location> locations = await locationFromAddress(
                         textController.text,
                         localeIdentifier: "IT");
-                    var address = await placemarkFromCoordinates(
+                    var addresses = await placemarkFromCoordinates(
                         locations[0].latitude, locations[0].longitude);
+                    Placemark placeMark = addresses[0];
+
+                    String addressStr = address_serializer(placeMark);
+
                     setState(() {
                       stops.add(Stop(
                           lat: locations[0].latitude,
                           lng: locations[0].longitude,
-                          address: address[0].toString()));
+                          address: addressStr));
                     });
 
-                    print(address[0].toString());
                     print(current_lng);
                   },
                 ),
-                Text(
-                    "Lat: ${current_lat.toStringAsFixed(4)} , Lng:${current_lng.toStringAsFixed(4)}"),
               ],
             ),
+            Text("Stops for this Trip:"),
             Expanded(
               child: ListView.builder(
                 shrinkWrap: true,
                 itemCount: stops.length,
                 itemBuilder: (context, index) => ListTile(
-                    title: Text("${stops[index].lat},${stops[index].lng}"),
+                    title: Text("${stops[index].address},${stops[index].lng}"),
                     subtitle: const Text('Click here to edit'),
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute<int>(
                         builder: (BuildContext context) {
-                          return const ManageStop();
+                          return ManageStop(stop: stops[index]);
                         },
                       )).then((value) => print(value));
                     }),
               ),
             ),
+            Text("Saved Stops in the db:"),
             Expanded(
               child: FutureBuilder(
                 future: tripStopDaoProvider.getStops(),
@@ -138,7 +142,10 @@ class _InsertTripState extends State<InsertTrip> {
                 },
               ),
             ),
-            InsertMap(stopList: stops)
+            InsertMap(
+              stopList: stops,
+              key: UniqueKey(),
+            )
           ],
         ),
       ),

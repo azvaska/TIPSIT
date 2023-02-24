@@ -16,19 +16,24 @@ class InsertMap extends StatefulWidget {
 
 class _InsertMapState extends State<InsertMap> {
   final _mapController = MapController();
+
   double _rotation = 0.0;
-  late LatLng base_position;
+  LatLng base_position = LatLng(46.32443, 12.234);
+
+  void setPosition() {
+    if (widget.stopList.length > 0) {
+      base_position =
+          LatLng(widget.stopList.last.lat, widget.stopList.last.lng);
+      _mapController.move(base_position, 15);
+    } else {
+      base_position = LatLng(46.32443, 12.234);
+    }
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    if (widget.stopList.length > 0) {
-      base_position =
-          LatLng(widget.stopList.first.lat, widget.stopList.first.lng);
-    } else {
-      base_position = LatLng(46.32443, 12.234);
-    }
   }
 
   Widget build(BuildContext context) {
@@ -36,12 +41,16 @@ class _InsertMapState extends State<InsertMap> {
         AppBar().preferredSize.height -
         MediaQuery.of(context).padding.top -
         MediaQuery.of(context).padding.bottom;
+
     return SizedBox(
       height: availableHeight * 0.5,
       child: FlutterMap(
         mapController: _mapController,
         options: MapOptions(
             center: base_position,
+            onMapReady: () {
+              setPosition();
+            },
             onPositionChanged: (mapPosition, _) {
               setState(() {
                 _rotation = _mapController.rotation;

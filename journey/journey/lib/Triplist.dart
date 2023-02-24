@@ -28,6 +28,17 @@ Trip t = Trip(name: "idroscimmia", updated: DateTime.now());
     tripStopDaoProvider.insertStop(s);
 */
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          Navigator.push(context, MaterialPageRoute<int>(
+            builder: (BuildContext context) {
+              return const InsertTrip();
+            },
+          )).then((value) => print(value));
+        },
+        backgroundColor: Colors.green,
+        child: const Icon(Icons.add),
+      ),
       appBar: AppBar(
         title: const Text('Stops for Trip 2'),
       ),
@@ -49,7 +60,7 @@ Trip t = Trip(name: "idroscimmia", updated: DateTime.now());
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute<int>(
                       builder: (BuildContext context) {
-                        return InsertTrip();
+                        return InsertTrip(trip: trips[index]);
                       },
                     )).then((value) => print(value));
                   }),
