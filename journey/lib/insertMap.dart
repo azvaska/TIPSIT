@@ -5,6 +5,7 @@ import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
+import 'package:just_the_tooltip/just_the_tooltip.dart';
 import 'package:latlong2/latlong.dart';
 import 'dart:math' as math;
 
@@ -23,6 +24,7 @@ class _InsertMapState extends State<InsertMap> {
   double _rotation = 0.0;
   LatLng base_position = LatLng(46.32443, 12.234);
   final PopupController _popupLayerController = PopupController();
+  final tooltipController = JustTheController();
   void setPosition() {
     if (widget.stopList.isNotEmpty) {
       base_position = LatLng(
@@ -38,6 +40,7 @@ class _InsertMapState extends State<InsertMap> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
     _markers = widget.stopList.entries
         .map((entry) => MapMarker(
               lat: entry.value.lat,
@@ -64,6 +67,8 @@ class _InsertMapState extends State<InsertMap> {
         mapController: _mapController,
         options: MapOptions(
           center: base_position,
+          interactiveFlags: InteractiveFlag.all,
+
           onMapReady: () {
             setPosition();
           },
@@ -72,47 +77,39 @@ class _InsertMapState extends State<InsertMap> {
               _rotation = _mapController.rotation;
             });
           },
-          onTap: (_, __) => _popupLayerController.hideAllPopups(),
+          // onTap: (_, __) => _popupLayerController.hideAllPopups(),
+          onTap: (_, position) {
+            _popupLayerController.hideAllPopups(disableAnimation: true);
+            widget.stopList.forEach((key, value) {
+              if ((value.lat - position.latitude).abs() <= 0.005 &&
+                  (value.lng - position.longitude).abs() <= 0.005) {
+                _popupLayerController.showPopupsOnlyFor(
+                    [_markers.firstWhere((element) => element.name == key)]);
+              }
+            });
+          },
         ),
         children: [
           TileLayer(
             urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            userAgentPackageName: 'devsd.ilbug.com',
+            userAgentPackageName: 'dscimd..com',
           ),
+          // MarkerLayer(markers: _markers as List<Marker>),
+
           PopupMarkerLayerWidget(
             options: PopupMarkerLayerOptions(
-              markerCenterAnimation: const MarkerCenterAnimation(),
-              markers: _markers,
-              popupSnap: PopupSnap.markerCenter,
-              popupController: _popupLayerController,
-              popupBuilder: (BuildContext context, Marker marker) {
-                if (marker is MapMarker) {
-                  return MapCardPopup(marker.name);
-                }
-                return const Icon(
-                  Icons.error,
-                  size: 90,
-                );
-              },
-              markerRotateAlignment:
-                  PopupMarkerLayerOptions.rotationAlignmentFor(
-                AnchorAlign.top,
-              ),
-              popupAnimation: const PopupAnimation.fade(
-                  duration: Duration(milliseconds: 700)),
-              markerTapBehavior: MarkerTapBehavior.togglePopupAndHideRest(),
-              onPopupEvent: (event, selectedMarkers) {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(event.runtimeType.toString()),
-                    duration: const Duration(seconds: 1),
-                  ),
-                );
-              },
-            ),
+                popupController: _popupLayerController,
+                markers: _markers,
+                // markerRotateAlignment:
+                //     PopupMarkerLayerOptions.rotationAlignmentFor(
+                //         AnchorAlign.top),
+                popupBuilder: (BuildContext context, Marker marker) {
+                  if (marker is MapMarker) {
+                    return MapCardPopup(marker.name);
+                  }
+                  return const SizedBox.shrink();
+                }),
           ),
-          // MarkerLayer(markers: _markers),
           PolylineLayer(polylines: [
             Polyline(
               points: widget.stopList.entries
@@ -120,21 +117,6 @@ class _InsertMapState extends State<InsertMap> {
                   .toList(),
             ),
           ]),
-
-          // PopupMarkerLayerWidget(
-          //   options: PopupMarkerLayerOptions(
-          //       popupController: _popupLayerController,
-          //       markers: _markers,
-          //       markerRotateAlignment:
-          //           PopupMarkerLayerOptions.rotationAlignmentFor(
-          //               AnchorAlign.top),
-          //       popupBuilder: (BuildContext context, Marker marker) {
-          //         if (marker is MapMarker) {
-          //           return MapCardPopup(marker.name);
-          //         }
-          //         return const SizedBox.shrink();
-          //       }),
-          // ),
         ],
       ),
     );
@@ -173,9 +155,7 @@ class MapMarker extends Marker {
           point: LatLng(lat, lng),
           height: 90,
           width: 90,
-          anchorPos: AnchorPos.align(AnchorAlign.top),
           builder: (BuildContext ctx) {
-            print("DIOAN");
             return const Icon(Icons.location_pin, size: 40);
           },
         );

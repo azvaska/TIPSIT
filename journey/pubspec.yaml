@@ -44,6 +44,8 @@ dependencies:
   latlong2: ^0.8.1
   geocoding: ^2.0.5
   flutter_map_marker_popup: ^4.0.0
+  matcher: ^0.12.13
+  just_the_tooltip: ^0.0.12
 
 dev_dependencies:
   flutter_test:
