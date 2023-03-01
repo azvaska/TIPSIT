@@ -1,14 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:journey/tripprovider.dart';
 import 'package:journey/util.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
-import 'package:geocoding/geocoding.dart';
 import 'dart:math' as math;
 
 import 'model/trip.dart';
@@ -30,12 +28,17 @@ class DataPass {
 }
 
 class _ManageStopState extends State<ManageStop> {
-  List<Marker> markers = [];
+  Set<Marker> markers = Set();
+  static final LatLng _kMapCenter = const LatLng(45, 12);
+  static final CameraPosition _kInitialPosition =
+      CameraPosition(target: _kMapCenter, zoom: 11.0, tilt: 0, bearing: 0);
   TextEditingController textController = TextEditingController();
   TextEditingController textNameController = TextEditingController();
 
   late double current_lat;
   late double current_lng;
+  late GoogleMapController mapController;
+
   String address = "";
   String name = "";
   double _rotation = 0;
@@ -50,9 +53,36 @@ class _ManageStopState extends State<ManageStop> {
       current_lat = widget.base_lat;
       current_lng = widget.base_lng;
     }
+    _getCurrentLocation();
   }
 
-  final _mapController = MapController();
+  _getCurrentLocation() async {
+    await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+        .then((Position position) async {
+      setState(() {
+        // Store the position in the variable
+        var _currentPosition = position;
+        current_lat = _currentPosition.latitude;
+        current_lng = _currentPosition.longitude;
+        print('CURRENT POS: $_currentPosition');
+
+        // For moving the camera to current location
+        mapController.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(position.latitude, position.longitude),
+              zoom: 13.0,
+            ),
+          ),
+        );
+      });
+      // await _getAddress();
+    }).catchError((e) {
+      print(e);
+    });
+// Location permission is not granted
+  }
+
   @override
   Widget build(BuildContext context) {
     final availableHeight = MediaQuery.of(context).size.height -
@@ -61,6 +91,15 @@ class _ManageStopState extends State<ManageStop> {
         MediaQuery.of(context).padding.bottom;
     TripStopProvider tripStopDaoProvider =
         Provider.of<TripStopProvider>(context);
+    markers = {
+      Marker(
+        position: LatLng(current_lat, current_lng),
+        markerId: const MarkerId("current"),
+        infoWindow: const InfoWindow(
+          title: "current",
+        ),
+      )
+    };
     print(availableHeight % 10);
     return Padding(
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
@@ -123,13 +162,13 @@ class _ManageStopState extends State<ManageStop> {
                 IconButton(
                   icon: const Icon(Icons.search),
                   onPressed: () async {
-                    List<Location> locations = await locationFromAddress(
-                        textController.text,
-                        localeIdentifier: "IT");
-                    setState(() {
-                      current_lat = locations[0].latitude;
-                      current_lng = locations[0].longitude;
-                    });
+                    // List<Location> locations = await locationFromAddress(
+                    //     textController.text,
+                    //     localeIdentifier: "IT");
+                    // setState(() {
+                    //   current_lat = locations[0].latitude;
+                    //   current_lng = locations[0].longitude;
+                    // });
 
                     print(current_lat);
                     print(current_lng);
@@ -140,41 +179,20 @@ class _ManageStopState extends State<ManageStop> {
               ],
             ),
             Expanded(
-              child: FlutterMap(
-                mapController: _mapController,
-                options: MapOptions(
-                    center: LatLng(current_lat, current_lng),
-                    onLongPress: (tapPosition, point) {
-                      setState(() {
-                        current_lat = point.latitude;
-                        current_lng = point.longitude;
-                      });
-                    },
-                    onPositionChanged: (mapPosition, _) {
-                      setState(() {
-                        _rotation = _mapController.rotation;
-                      });
-                    }),
-                children: [
-                  TileLayer(
-                    urlTemplate:
-                        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                    userAgentPackageName: 'dev.ilbug.com',
-                  ),
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: LatLng(current_lat, current_lng),
-                        width: 50,
-                        height: 50,
-                        rotate: false,
-                        builder: (context) => Transform.rotate(
-                            angle: -_rotation * math.pi / 180,
-                            child: const Icon(Icons.pin_drop)),
-                      ),
-                    ],
-                  ),
-                ],
+              child: GoogleMap(
+                onMapCreated: (GoogleMapController controller) {
+                  mapController = controller;
+                },
+                mapType: MapType.hybrid,
+                myLocationEnabled: true,
+                onTap: (argument) {
+                  setState(() {
+                    current_lat = argument.latitude;
+                    current_lng = argument.longitude;
+                  });
+                },
+                markers: markers,
+                initialCameraPosition: _kInitialPosition,
               ),
             ),
           ],

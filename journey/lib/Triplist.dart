@@ -15,19 +15,8 @@ class TripList extends StatelessWidget {
     TripStopProvider tripStopDaoProvider =
         Provider.of<TripStopProvider>(context);
 
-    /*
-    Stop s = Stop(lat: 1, lng: 1);
-Trip t = Trip(name: "idroscimmia", updated: DateTime.now());
-    tripStopDaoProvider.insertTrip(t);
-    
-    .then((value) => 
-    );
-    tripStopDaoProvider
-        .insertTripStop(TripStop(trip_id: t.id!, stop_id: s.id!));
-
-    tripStopDaoProvider.insertStop(s);
-*/
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           Navigator.push(context, MaterialPageRoute<int>(

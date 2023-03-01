@@ -40,12 +40,14 @@ dependencies:
   build_runner: ^2.3.3
   floor_generator: ^1.4.1
   provider: ^6.0.5
-  flutter_map: ^3.1.0
   latlong2: ^0.8.1
-  geocoding: ^2.0.5
-  flutter_map_marker_popup: ^4.0.0
   matcher: ^0.12.13
-  just_the_tooltip: ^0.0.12
+  google_maps_flutter: ^2.2.4
+  geolocator: ^9.0.2
+  permission_handler: ^10.2.0
+  flutter_polyline_points: ^1.0.0
+  geocoding: ^2.0.5
+  flutter_randomcolor: ^1.0.14
 
 dev_dependencies:
   flutter_test:

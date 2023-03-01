@@ -1,15 +1,15 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
-import 'package:just_the_tooltip/just_the_tooltip.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:flutter_randomcolor/flutter_randomcolor.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:journey/util.dart';
 import 'dart:math' as math;
-
+import 'package:permission_handler/permission_handler.dart';
 import 'model/trip.dart';
+import 'dart:math' as math;
 
 class InsertMap extends StatefulWidget {
   InsertMap({super.key, required this.stopList});
@@ -19,40 +19,194 @@ class InsertMap extends StatefulWidget {
 }
 
 class _InsertMapState extends State<InsertMap> {
-  final _mapController = MapController();
-  List<MapMarker> _markers = [];
+  late CameraPosition _kInitialPosition;
+  Set<Marker> _markers = Set();
+  late PolylinePoints polylinePoints;
+
+// List of coordinates to join
+  List<LatLng> latlonlist = [];
+  List<LatLng> polylineCoordinates = [];
+// Map storing polylines created by connecting two points
+  Map<PolylineId, Polyline> polylines = {};
+  // Position _currentPosition;
   double _rotation = 0.0;
-  LatLng base_position = LatLng(46.32443, 12.234);
-  final PopupController _popupLayerController = PopupController();
-  final tooltipController = JustTheController();
-  void setPosition() {
-    if (widget.stopList.isNotEmpty) {
-      base_position = LatLng(
-          widget.stopList.values.elementAt(widget.stopList.length - 1).lat,
-          widget.stopList.values.elementAt(widget.stopList.length - 1).lng);
-      _mapController.move(base_position, 15);
-    } else {
-      base_position = LatLng(46.32443, 12.234);
+  int _polylineIdCounter = 0;
+  late GoogleMapController mapController;
+  Future<Map<PolylineId, Polyline>> _createPolylines(
+      double startLatitude,
+      double startLongitude,
+      double destinationLatitude,
+      double destinationLongitude,
+      int i) async {
+    // Initializing PolylinePoints
+    polylinePoints = PolylinePoints();
+    polylineCoordinates = [];
+    // Generating the list of coordinates to be used for
+    // drawing the polylines
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      "AIzaSyAYZpKch2gfAepDl2nsfm9Q59M0P6bqrUY", // Google Maps API Key
+      PointLatLng(startLatitude, startLongitude),
+      PointLatLng(destinationLatitude, destinationLongitude),
+      travelMode: TravelMode.driving,
+    );
+
+    // Adding the coordinates to the list
+    if (result.points.isNotEmpty) {
+      result.points.forEach((PointLatLng point) {
+        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+      });
     }
+
+    // Defining an ID
+    final String polylineIdVal = 'polyline_id_$_polylineIdCounter';
+    PolylineId id = PolylineId(polylineIdVal);
+    _polylineIdCounter++;
+
+    // Initializing Polyline
+
+    Polyline polyline = Polyline(
+      polylineId: id,
+      color: lineColor[math.Random().nextInt(lineColor.length)],
+      points: polylineCoordinates,
+      consumeTapEvents:
+          true, // Set to true to make polylines recognize tap events
+      onTap: () {
+        _handlePolylineTap(
+            id); // function that will handle the color change and will be triggered when the polyline was tapped
+      },
+      width: 5,
+    );
+    return {id: polyline};
+    // Adding the polyline to the map
   }
+
+  _handlePolylineTap(PolylineId polylineId) {
+    setState(() {
+      Polyline newPolyline = polylines[polylineId]!.copyWith(
+          colorParam: Colors
+              .orange); // create a new polyline object which has a different color using the colorParam property
+      polylines[polylineId] =
+          newPolyline; // add that new polyline object to the list
+    });
+  }
+
+  _getCurrentLocation() async {
+    await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+        .then((Position position) async {
+      setState(() {
+        // Store the position in the variable
+        var _currentPosition = position;
+
+        print('CURRENT POS: $_currentPosition');
+
+        // For moving the camera to current location
+        mapController.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(position.latitude, position.longitude),
+              zoom: 13.0,
+            ),
+          ),
+        );
+      });
+      // await _getAddress();
+    }).catchError((e) {
+      print(e);
+    });
+// Location permission is not granted
+  }
+
+  void setPosition() {
+    mapController.moveCamera(
+      CameraUpdate.newLatLngBounds(
+        MapUtils.boundsFromLatLngList(latlonlist),
+        10.0,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    mapController.dispose();
+    super.dispose();
+  }
+
+  load_state() async {
+    for (var i = 0; i < widget.stopList.entries.length - 1; i++) {
+      var line = await _createPolylines(
+          widget.stopList.entries.elementAt(i).value.lat,
+          widget.stopList.entries.elementAt(i).value.lng,
+          widget.stopList.entries.elementAt(i + 1).value.lat,
+          widget.stopList.entries.elementAt(i + 1).value.lng,
+          i % 2);
+      latlonlist.add(LatLng(
+        widget.stopList.entries.elementAt(i).value.lat,
+        widget.stopList.entries.elementAt(i).value.lng,
+      ));
+      polylines[line.keys.first] = line.values.first;
+    }
+    setState(() {});
+  }
+
+  // load_state_fake() async {
+  //   var line = await _createPolylines(
+  //       45.5147114, 12.199587, 45.5057336, 12.2135167, 1);
+  //   // latlonlist.add(LatLng(
+  //   //   45.34242,
+  //   //   12.54323,
+  //   // ));
+  //   polylines[line.keys.first] = line.values.first;
+  //   line = await _createPolylines(
+  //       45.5612417, 12.2962491, 45.5491125, 12.2849209, 2);
+  //   // latlonlist.add(LatLng(
+  //   //   45.7864,
+  //   //   12.54323,
+  //   // ));
+  //   polylines[line.keys.first] = line.values.first;
+  //   print('sus');
+  //   setState(() {});
+  // }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
+    // colori differenti per inizio e fine
+    // colori tratte differenti
+    // load_state_fake();
+    if (widget.stopList.isNotEmpty) {
+      load_state();
+      _kInitialPosition = CameraPosition(
+          target: LatLng(widget.stopList.entries.first.value.lat,
+              widget.stopList.entries.first.value.lng),
+          zoom: 13.0,
+          tilt: 0,
+          bearing: 0);
+    } else {
+      _kInitialPosition = const CameraPosition(
+          target: LatLng(45.4935, 12.2463), zoom: 8.0, tilt: 0, bearing: 0);
+    }
     _markers = widget.stopList.entries
-        .map((entry) => MapMarker(
-              lat: entry.value.lat,
-              lng: entry.value.lng,
-              name: entry.key,
+        .map((entry) => Marker(
+              position: LatLng(entry.value.lat, entry.value.lng),
+              markerId: MarkerId(entry.key),
+              infoWindow: InfoWindow(
+                title: entry.key,
+                snippet: entry.value.address,
+              ),
             ))
-        .toList();
-    _markers.add(MapMarker(
-      lat: 46.32443,
-      lng: 12.234,
-      name: "idro",
-    ));
+        .toSet();
+
+    // _markers.add(MapMarker(
+    //   lat: 46.32443,
+    //   lng: 12.234,
+    //   name: "idro",
+    //   build: (BuildContext ctx) {
+    //     return Transform.rotate(
+    //         angle: -_rotation * math.pi / 180,
+    //         child: const Icon(Icons.pin_drop));
+    //   },
+    // ));
   }
 
   Widget build(BuildContext context) {
@@ -61,102 +215,25 @@ class _InsertMapState extends State<InsertMap> {
         MediaQuery.of(context).padding.top -
         MediaQuery.of(context).padding.bottom;
 
-    return SizedBox(
-      height: availableHeight * 0.59,
-      child: FlutterMap(
-        mapController: _mapController,
-        options: MapOptions(
-          center: base_position,
-          interactiveFlags: InteractiveFlag.all,
-
-          onMapReady: () {
+    return Expanded(
+      flex: 2,
+      // height: availableHeight * 0.55,
+      child: GoogleMap(
+        mapType: MapType.hybrid,
+        onMapCreated: (GoogleMapController controller) {
+          mapController = controller;
+          if (widget.stopList.isNotEmpty) {
             setPosition();
-          },
-          onPositionChanged: (mapPosition, _) {
-            setState(() {
-              _rotation = _mapController.rotation;
-            });
-          },
-          // onTap: (_, __) => _popupLayerController.hideAllPopups(),
-          onTap: (_, position) {
-            _popupLayerController.hideAllPopups(disableAnimation: true);
-            widget.stopList.forEach((key, value) {
-              if ((value.lat - position.latitude).abs() <= 0.005 &&
-                  (value.lng - position.longitude).abs() <= 0.005) {
-                _popupLayerController.showPopupsOnlyFor(
-                    [_markers.firstWhere((element) => element.name == key)]);
-              }
-            });
-          },
-        ),
-        children: [
-          TileLayer(
-            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            userAgentPackageName: 'dscimd..com',
-          ),
-          // MarkerLayer(markers: _markers as List<Marker>),
-
-          PopupMarkerLayerWidget(
-            options: PopupMarkerLayerOptions(
-                popupController: _popupLayerController,
-                markers: _markers,
-                // markerRotateAlignment:
-                //     PopupMarkerLayerOptions.rotationAlignmentFor(
-                //         AnchorAlign.top),
-                popupBuilder: (BuildContext context, Marker marker) {
-                  if (marker is MapMarker) {
-                    return MapCardPopup(marker.name);
-                  }
-                  return const SizedBox.shrink();
-                }),
-          ),
-          PolylineLayer(polylines: [
-            Polyline(
-              points: widget.stopList.entries
-                  .map((entry) => LatLng(entry.value.lat, entry.value.lng))
-                  .toList(),
-            ),
-          ]),
-        ],
+          } else {
+            _getCurrentLocation();
+          }
+        },
+        polylines: Set<Polyline>.of(polylines.values),
+        myLocationEnabled: true,
+        myLocationButtonEnabled: false,
+        markers: _markers,
+        initialCameraPosition: _kInitialPosition,
       ),
     );
   }
-}
-
-class MapCardPopup extends StatelessWidget {
-  final String name;
-  const MapCardPopup(this.name, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    print("showing popup: ");
-    return SizedBox(
-      width: 100,
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(name),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class MapMarker extends Marker {
-  final String name;
-
-  MapMarker({required this.name, required double lat, required double lng})
-      : super(
-          point: LatLng(lat, lng),
-          height: 90,
-          width: 90,
-          builder: (BuildContext ctx) {
-            return const Icon(Icons.location_pin, size: 40);
-          },
-        );
 }

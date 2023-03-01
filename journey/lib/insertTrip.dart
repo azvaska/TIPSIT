@@ -4,14 +4,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:journey/insertMap.dart';
 import 'package:journey/insertStop.dart';
 import 'package:journey/tripprovider.dart';
-import 'package:journey/util.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
-import 'package:geocoding/geocoding.dart';
 
 import 'model/trip.dart';
 
@@ -61,15 +57,25 @@ class _InsertTripState extends State<InsertTrip> {
         ),
         body: Column(
           children: [
+            const Text("Trip Name:"),
+
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text("Trip Name:"),
-                Container(
-                  padding: const EdgeInsets.only(left: 5),
-                  width: 200,
-                  child: TextField(
-                    controller: textController,
-                    maxLines: null,
+                IconButton(
+                  icon: const Icon(
+                    Icons.abc,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {},
+                ),
+                Center(
+                  child: Container(
+                    width: 200,
+                    child: TextField(
+                      controller: textController,
+                      maxLines: null,
+                    ),
                   ),
                 ),
                 IconButton(
