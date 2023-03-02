@@ -17,22 +17,54 @@ String address_serializer(Placemark placeMark) {
 }
 
 class MapUtils {
+  //
   static LatLngBounds boundsFromLatLngList(List<LatLng> list) {
-    double? x0, x1, y0, y1;
-    for (LatLng latLng in list) {
-      if (x0 == null) {
-        x0 = x1 = latLng.latitude;
-        y0 = y1 = latLng.longitude;
-      } else {
-        if (latLng.latitude > x1!) x1 = latLng.latitude;
-        if (latLng.latitude < x0) x0 = latLng.latitude;
-        if (latLng.longitude > y1!) y1 = latLng.longitude;
-        if (latLng.longitude < y0!) y0 = latLng.longitude;
+    double north, south, east, west;
+
+    // initialize bounds with first coordinate
+    north = south = list[0].latitude;
+    east = west = list[0].longitude;
+
+    // loop through remaining coordinates to determine bounds
+    for (LatLng coordinate in list) {
+      if (coordinate.latitude > north) {
+        north = coordinate.latitude;
+      }
+      if (coordinate.latitude < south) {
+        south = coordinate.latitude;
+      }
+      if (coordinate.longitude > east) {
+        east = coordinate.longitude;
+      }
+      if (coordinate.longitude < west) {
+        west = coordinate.longitude;
       }
     }
-    return LatLngBounds(
-        northeast: LatLng(x1!, y1!), southwest: LatLng(x0!, y0!));
+
+    LatLngBounds bounds = LatLngBounds(
+      southwest: LatLng(south, west),
+      northeast: LatLng(north, east),
+    );
+
+    return bounds;
   }
+
+  // static LatLngBounds boundsFromLatLngList(List<LatLng> list) {
+  //   double? x0, x1, y0, y1;
+  //   for (LatLng latLng in list) {
+  //     if (x0 == null) {
+  //       x0 = x1 = latLng.latitude;
+  //       y0 = y1 = latLng.longitude;
+  //     } else {
+  //       if (latLng.latitude > x1!) x1 = latLng.latitude;
+  //       if (latLng.latitude < x0) x0 = latLng.latitude;
+  //       if (latLng.longitude > y1!) y1 = latLng.longitude;
+  //       if (latLng.longitude < y0!) y0 = latLng.longitude;
+  //     }
+  //   }
+  //   return LatLngBounds(
+  //       northeast: LatLng(x1!, y1!), southwest: LatLng(x0!, y0!));
+  // }
 }
 
 final List<Color> lineColor = [

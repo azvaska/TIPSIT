@@ -42,55 +42,77 @@ class _InsertTripState extends State<InsertTrip> {
     return Padding(
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
       child: Scaffold(
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            stops.forEach((key, value) async {
-              await tripStopDaoProvider.insertTripStop(TripStop(
-                  trip_id: currentTrip!.id!,
-                  stop_id: value.id!,
-                  name_stop: key));
-            });
-            Navigator.pop(context);
-          },
-          backgroundColor: Colors.green,
-          child: const Icon(Icons.check),
-        ),
+        resizeToAvoidBottomInset: false,
         body: Column(
           children: [
-            const Text("Trip Name:"),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Container(
+                child: Column(
               children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.abc,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {},
-                ),
-                Center(
-                  child: Container(
-                    width: 200,
-                    child: TextField(
-                      controller: textController,
-                      maxLines: null,
+                const Text("Trip Name:"),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.abc,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          if (currentTrip == null) {
+                            currentTrip = Trip(
+                                name: textController.text,
+                                updated: DateTime.now());
+                            // currentTrip!.id = tripStopDaoProvider.insertTrip(currentTrip!);
+                          } else {
+                            currentTrip!.name = textController.text;
+                            currentTrip!.updated = DateTime.now();
+                            // tripStopDaoProvider.updateTrip(currentTrip!);
+                          }
+                        });
+                      },
                     ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.check),
-                  onPressed: () async {
-                    setState(() {
-                      currentTrip = Trip(
-                          name: textController.text, updated: DateTime.now());
-                    });
+                    Center(
+                      child: Container(
+                        width: 250,
+                        child: TextField(
+                          controller: textController,
+                          maxLines: null,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.save,
+                        size: 35,
+                      ),
+                      onPressed: () async {
+                        if (currentTrip == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                              content: Text(
+                                  "Please insert a name for the trip before saving")));
+                          return;
+                        }
+                        currentTrip!.id =
+                            await tripStopDaoProvider.insertTrip(currentTrip!);
 
-                    print(current_lng);
-                  },
+                        stops.forEach((key, value) async {
+                          value.id =
+                              await tripStopDaoProvider.insertStop(value);
+                          await tripStopDaoProvider.insertTripStop(TripStop(
+                              trip_id: currentTrip!.id!,
+                              stop_id: value.id!,
+                              name_stop: key));
+                        });
+                        Navigator.pop(context);
+
+                        print(current_lng);
+                      },
+                    ),
+                  ],
                 ),
               ],
-            ),
+            )),
             TextButton(
               child: const Text(
                 'Add Stop',
@@ -101,44 +123,83 @@ class _InsertTripState extends State<InsertTrip> {
                   builder: (BuildContext context) {
                     return const ManageStop();
                   },
-                )).then((value) => {
-                      if (value != null)
-                        {
-                          setState(() {
-                            stops[value.name] = value.stop;
-                          })
-                        }
+                )).then((value) {
+                  if (value != null) {
+                    setState(() {
+                      stops[value.name] = value.stop;
                     });
+                  }
+                  FocusManager.instance.primaryFocus?.unfocus();
+                });
               },
             ),
             // const Text("Stops for this Trip:"),
             Expanded(
-              child: ListView.builder(
+              child: ReorderableListView(
                 shrinkWrap: true,
-                itemCount: stops.length,
-                itemBuilder: (context, index) => ListTile(
-                    title: Text(
-                        "${stops.keys.elementAt(index)}: ${stops.values.elementAt(index).address}"),
-                    subtitle: const Text('Click here to edit'),
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute<DataPass>(
-                        builder: (BuildContext context) {
-                          return ManageStop(stop: stops[index]);
-                        },
-                      )).then((value) => {
-                            if (value != null)
-                              {
-                                setState(() {
-                                  stops[value.name] = value.stop;
-                                })
-                              }
-                          });
-                    }),
+                onReorder: (int oldIndex, int newIndex) {
+                  var key = stops.keys.elementAt(oldIndex);
+                  var item = {key: stops.remove(key)!};
+                  var i = 0;
+                  var newMap = LinkedHashMap<String, Stop>();
+                  stops.forEach((key, value) {
+                    if (i == newIndex) {
+                      newMap.addAll(item);
+                    }
+                    newMap[key] = value;
+                    i++;
+                  });
+                  if (i <= newIndex) {
+                    newMap.addAll(item);
+                  }
+                  setState(() {
+                    stops = newMap;
+                  });
+                },
+                children: List.generate(
+                    stops.length,
+                    (index) => Dismissible(
+                          onDismissed: (direction) {
+                            // Remove the item from the data source.
+                            setState(() {
+                              stops.remove(stops.keys.elementAt(index));
+                            });
+
+                            // Then show a snackbar.
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text(
+                                    '${stops.keys.elementAt(index)} dismissed')));
+                          },
+                          key: Key(stops.keys.elementAt(index)),
+                          background: Container(color: Colors.red),
+                          child: ListTile(
+                              title: Text(
+                                  "${stops.keys.elementAt(index)}: ${stops.values.elementAt(index).address}"),
+                              subtitle: const Text('Click here to edit'),
+                              onTap: () {
+                                Navigator.push(context,
+                                    MaterialPageRoute<DataPass>(
+                                  builder: (BuildContext context) {
+                                    return ManageStop(
+                                      base_name: stops.keys.elementAt(index),
+                                      stop: stops.values.elementAt(index),
+                                    );
+                                  },
+                                )).then((value) {
+                                  if (value != null) {
+                                    stops.remove(stops.keys.elementAt(index));
+                                    setState(() {
+                                      stops[value.name] = value.stop;
+                                    });
+                                  }
+                                });
+                              }),
+                        )),
               ),
             ),
             InsertMap(
               stopList: stops,
-              key: UniqueKey(),
+              key: Key(stops.hashCode.toString() + stops.length.toString()),
             )
           ],
         ),

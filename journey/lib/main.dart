@@ -30,15 +30,26 @@ void check_permission() async {
   }
 }
 
-class MyApp extends StatelessWidget {
-  final AppDatabase database;
+class MyApp extends StatefulWidget {
   const MyApp(this.database, {super.key});
+  final AppDatabase database;
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    // check_permission();
+  }
 
   @override
   Widget build(BuildContext context) {
-    check_permission();
     return ChangeNotifierProvider(
-      create: (_) => TripStopProvider(database),
+      create: (_) => TripStopProvider(widget.database),
       child: const MaterialApp(
         title: 'My App',
         home: TripList(),
@@ -46,5 +57,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-class MyHomePage {}

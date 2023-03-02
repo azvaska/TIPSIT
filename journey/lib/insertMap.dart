@@ -6,10 +6,12 @@ import 'package:flutter_randomcolor/flutter_randomcolor.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:journey/util.dart';
+import 'package:maps_launcher/maps_launcher.dart';
 import 'dart:math' as math;
 import 'package:permission_handler/permission_handler.dart';
 import 'model/trip.dart';
 import 'dart:math' as math;
+import 'package:url_launcher/url_launcher.dart';
 
 class InsertMap extends StatefulWidget {
   InsertMap({super.key, required this.stopList});
@@ -31,7 +33,7 @@ class _InsertMapState extends State<InsertMap> {
   // Position _currentPosition;
   double _rotation = 0.0;
   int _polylineIdCounter = 0;
-  late GoogleMapController mapController;
+  GoogleMapController? mapController;
   Future<Map<PolylineId, Polyline>> _createPolylines(
       double startLatitude,
       double startLongitude,
@@ -68,26 +70,10 @@ class _InsertMapState extends State<InsertMap> {
       polylineId: id,
       color: lineColor[math.Random().nextInt(lineColor.length)],
       points: polylineCoordinates,
-      consumeTapEvents:
-          true, // Set to true to make polylines recognize tap events
-      onTap: () {
-        _handlePolylineTap(
-            id); // function that will handle the color change and will be triggered when the polyline was tapped
-      },
       width: 5,
     );
     return {id: polyline};
     // Adding the polyline to the map
-  }
-
-  _handlePolylineTap(PolylineId polylineId) {
-    setState(() {
-      Polyline newPolyline = polylines[polylineId]!.copyWith(
-          colorParam: Colors
-              .orange); // create a new polyline object which has a different color using the colorParam property
-      polylines[polylineId] =
-          newPolyline; // add that new polyline object to the list
-    });
   }
 
   _getCurrentLocation() async {
@@ -100,11 +86,11 @@ class _InsertMapState extends State<InsertMap> {
         print('CURRENT POS: $_currentPosition');
 
         // For moving the camera to current location
-        mapController.animateCamera(
+        mapController!.animateCamera(
           CameraUpdate.newCameraPosition(
             CameraPosition(
               target: LatLng(position.latitude, position.longitude),
-              zoom: 13.0,
+              zoom: 10.0,
             ),
           ),
         );
@@ -117,17 +103,17 @@ class _InsertMapState extends State<InsertMap> {
   }
 
   void setPosition() {
-    mapController.moveCamera(
-      CameraUpdate.newLatLngBounds(
-        MapUtils.boundsFromLatLngList(latlonlist),
-        10.0,
-      ),
+    var bounds = MapUtils.boundsFromLatLngList(latlonlist);
+    mapController!.animateCamera(
+      CameraUpdate.newLatLngBounds(bounds, 50),
     );
   }
 
   @override
   void dispose() {
-    mapController.dispose();
+    if (mapController != null) {
+      mapController!.dispose();
+    }
     super.dispose();
   }
 
@@ -148,65 +134,53 @@ class _InsertMapState extends State<InsertMap> {
     setState(() {});
   }
 
-  // load_state_fake() async {
-  //   var line = await _createPolylines(
-  //       45.5147114, 12.199587, 45.5057336, 12.2135167, 1);
-  //   // latlonlist.add(LatLng(
-  //   //   45.34242,
-  //   //   12.54323,
-  //   // ));
-  //   polylines[line.keys.first] = line.values.first;
-  //   line = await _createPolylines(
-  //       45.5612417, 12.2962491, 45.5491125, 12.2849209, 2);
-  //   // latlonlist.add(LatLng(
-  //   //   45.7864,
-  //   //   12.54323,
-  //   // ));
-  //   polylines[line.keys.first] = line.values.first;
-  //   print('sus');
-  //   setState(() {});
-  // }
+  launchGoogleMaps(String originLat, String originLong, String destLat,
+      String destLong, List<String> waypoints) async {
+    String waypointsUrl = "";
+    if (waypoints.isNotEmpty) {
+      waypointsUrl = "&waypoints=";
+      waypointsUrl += waypoints.join("|");
+    }
+
+    Uri googleUrl = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&origin=$originLat,$originLong&destination=$destLat,$destLong&travelmode=driving$waypointsUrl');
+    if (await canLaunchUrl(googleUrl)) {
+      await launchUrl(googleUrl);
+    } else {
+      throw 'Could not open the map.';
+    }
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    // colori differenti per inizio e fine
-    // colori tratte differenti
-    // load_state_fake();
     if (widget.stopList.isNotEmpty) {
       load_state();
       _kInitialPosition = CameraPosition(
           target: LatLng(widget.stopList.entries.first.value.lat,
               widget.stopList.entries.first.value.lng),
-          zoom: 13.0,
+          zoom: 5.0,
           tilt: 0,
           bearing: 0);
     } else {
       _kInitialPosition = const CameraPosition(
           target: LatLng(45.4935, 12.2463), zoom: 8.0, tilt: 0, bearing: 0);
     }
-    _markers = widget.stopList.entries
-        .map((entry) => Marker(
-              position: LatLng(entry.value.lat, entry.value.lng),
-              markerId: MarkerId(entry.key),
-              infoWindow: InfoWindow(
-                title: entry.key,
-                snippet: entry.value.address,
-              ),
-            ))
-        .toSet();
-
-    // _markers.add(MapMarker(
-    //   lat: 46.32443,
-    //   lng: 12.234,
-    //   name: "idro",
-    //   build: (BuildContext ctx) {
-    //     return Transform.rotate(
-    //         angle: -_rotation * math.pi / 180,
-    //         child: const Icon(Icons.pin_drop));
-    //   },
-    // ));
+    _markers = widget.stopList.entries.map((entry) {
+      latlonlist.add(LatLng(
+        entry.value.lat,
+        entry.value.lng,
+      ));
+      return Marker(
+        position: LatLng(entry.value.lat, entry.value.lng),
+        markerId: MarkerId(entry.key),
+        infoWindow: InfoWindow(
+          title: entry.key,
+          snippet: entry.value.address,
+        ),
+      );
+    }).toSet();
   }
 
   Widget build(BuildContext context) {
@@ -218,21 +192,60 @@ class _InsertMapState extends State<InsertMap> {
     return Expanded(
       flex: 2,
       // height: availableHeight * 0.55,
-      child: GoogleMap(
-        mapType: MapType.hybrid,
-        onMapCreated: (GoogleMapController controller) {
-          mapController = controller;
-          if (widget.stopList.isNotEmpty) {
-            setPosition();
-          } else {
-            _getCurrentLocation();
-          }
-        },
-        polylines: Set<Polyline>.of(polylines.values),
-        myLocationEnabled: true,
-        myLocationButtonEnabled: false,
-        markers: _markers,
-        initialCameraPosition: _kInitialPosition,
+      child: Scaffold(
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(bottom: 90.0),
+          child: FloatingActionButton(
+              child: const Icon(Icons.map),
+              onPressed: () {
+                List<String> waypoints = [];
+                if (widget.stopList.length > 2) {
+                  for (var i = 1; i < widget.stopList.length - 1; i++) {
+                    waypoints.add(
+                        "${widget.stopList.entries.elementAt(i).value.lat},${widget.stopList.entries.elementAt(i).value.lng}");
+                  }
+                  // waypoints.addAll(widget.stopList.entries
+                  //     .map((e) => "${e.value.lat},${e.value.lng}"));
+                }
+                launchGoogleMaps(
+                    widget.stopList.entries.first.value.lat.toString(),
+                    widget.stopList.entries.first.value.lng.toString(),
+                    widget.stopList.entries.last.value.lat.toString(),
+                    widget.stopList.entries.last.value.lng.toString(),
+                    waypoints);
+              }),
+        ),
+        body: GoogleMap(
+          mapType: MapType.hybrid,
+          onMapCreated: (GoogleMapController controller) {
+            mapController = controller;
+            if (widget.stopList.length > 1) {
+              Future<void>.delayed(const Duration(milliseconds: 300), () async {
+                setPosition();
+                // setState(() {});
+              });
+            } else {
+              if (widget.stopList.isNotEmpty) {
+                mapController!.animateCamera(
+                  CameraUpdate.newCameraPosition(CameraPosition(
+                      target: LatLng(widget.stopList.entries.first.value.lat,
+                          widget.stopList.entries.first.value.lng),
+                      zoom: 13.0,
+                      tilt: 0,
+                      bearing: 0)),
+                );
+              } else {
+                _getCurrentLocation();
+              }
+            }
+          },
+          polylines: Set<Polyline>.of(polylines.values),
+          myLocationEnabled: true,
+          myLocationButtonEnabled: false,
+          // mapToolbarEnabled: true,
+          markers: _markers,
+          initialCameraPosition: _kInitialPosition,
+        ),
       ),
     );
   }

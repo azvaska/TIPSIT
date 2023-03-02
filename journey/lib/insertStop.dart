@@ -11,12 +11,18 @@ import 'dart:math' as math;
 
 import 'model/trip.dart';
 
+// !D/EGL_emulation(16717):,!I/Counters(16717): exceeded sample count in FrameTime
 class ManageStop extends StatefulWidget {
   const ManageStop(
-      {super.key, this.base_lat = 45.4950, this.base_lng = 12.2578, this.stop});
+      {super.key,
+      this.base_lat = 45.4950,
+      this.base_lng = 12.2578,
+      this.stop,
+      this.base_name});
   final double base_lat;
   final double base_lng;
   final Stop? stop;
+  final String? base_name;
   @override
   State<ManageStop> createState() => _ManageStopState();
 }
@@ -29,8 +35,8 @@ class DataPass {
 
 class _ManageStopState extends State<ManageStop> {
   Set<Marker> markers = Set();
-  static final LatLng _kMapCenter = const LatLng(45, 12);
-  static final CameraPosition _kInitialPosition =
+  static const LatLng _kMapCenter = LatLng(45, 12);
+  static const CameraPosition _kInitialPosition =
       CameraPosition(target: _kMapCenter, zoom: 11.0, tilt: 0, bearing: 0);
   TextEditingController textController = TextEditingController();
   TextEditingController textNameController = TextEditingController();
@@ -46,14 +52,15 @@ class _ManageStopState extends State<ManageStop> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    textNameController.text = widget.base_name ?? "";
     if (widget.stop != null) {
       current_lat = widget.stop!.lat;
       current_lng = widget.stop!.lng;
     } else {
       current_lat = widget.base_lat;
       current_lng = widget.base_lng;
+      // _getCurrentLocation();
     }
-    _getCurrentLocation();
   }
 
   _getCurrentLocation() async {
@@ -104,8 +111,10 @@ class _ManageStopState extends State<ManageStop> {
     return Padding(
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
+            FocusManager.instance.primaryFocus?.unfocus();
             var addresses =
                 await placemarkFromCoordinates(current_lat, current_lng);
             String addressStr = address_serializer(addresses[0]);
@@ -145,7 +154,9 @@ class _ManageStopState extends State<ManageStop> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.check),
-                  onPressed: () async {},
+                  onPressed: () async {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                  },
                 ),
               ],
             ),
@@ -162,13 +173,23 @@ class _ManageStopState extends State<ManageStop> {
                 IconButton(
                   icon: const Icon(Icons.search),
                   onPressed: () async {
-                    // List<Location> locations = await locationFromAddress(
-                    //     textController.text,
-                    //     localeIdentifier: "IT");
-                    // setState(() {
-                    //   current_lat = locations[0].latitude;
-                    //   current_lng = locations[0].longitude;
-                    // });
+                    List<Location> locations = await locationFromAddress(
+                        textController.text,
+                        localeIdentifier: "IT");
+                    mapController.animateCamera(
+                      CameraUpdate.newCameraPosition(
+                        CameraPosition(
+                          target: LatLng(
+                              locations[0].latitude, locations[0].longitude),
+                          zoom: await mapController.getZoomLevel(),
+                        ),
+                      ),
+                    );
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    setState(() {
+                      current_lat = locations[0].latitude;
+                      current_lng = locations[0].longitude;
+                    });
 
                     print(current_lat);
                     print(current_lng);
@@ -182,6 +203,22 @@ class _ManageStopState extends State<ManageStop> {
               child: GoogleMap(
                 onMapCreated: (GoogleMapController controller) {
                   mapController = controller;
+                  if (widget.stop == null) {
+                    _getCurrentLocation();
+                  } else {
+                    Future<void>.delayed(const Duration(milliseconds: 300),
+                        () async {
+                      mapController.animateCamera(
+                        CameraUpdate.newCameraPosition(
+                          CameraPosition(
+                            target: LatLng(current_lat, current_lng),
+                            zoom: 13.0,
+                          ),
+                        ),
+                      );
+                      // setState(() {});
+                    });
+                  }
                 },
                 mapType: MapType.hybrid,
                 myLocationEnabled: true,
