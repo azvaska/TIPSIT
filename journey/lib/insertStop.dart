@@ -121,17 +121,24 @@ class _ManageStopState extends State<ManageStop> {
             Stop? stop;
 
             if (widget.stop != null) {
-              widget.stop!.lat = current_lat;
-              widget.stop!.lng = current_lng;
+              if (widget.stop!.lat != current_lat ||
+                  widget.stop!.lng != current_lng) {
+                // update address
+                // widget.stop!.address = addressStr;
+                stop = Stop(
+                    lat: current_lat, lng: current_lng, address: addressStr);
+              } else {
+                widget.stop!.lat = current_lat;
+                widget.stop!.lng = current_lng;
 
-              widget.stop!.address = addressStr;
-              await tripStopDaoProvider.updateStop(widget.stop!);
-              stop = widget.stop;
+                widget.stop!.address = addressStr;
+                await tripStopDaoProvider.updateStop(widget.stop!);
+                stop = widget.stop;
+              }
             } else {
               // add search for an existing stop
               stop =
                   Stop(lat: current_lat, lng: current_lng, address: addressStr);
-              int stopId = await tripStopDaoProvider.insertStop(stop);
             }
             // ignore: use_build_context_synchronously
             Navigator.pop(context, DataPass(textNameController.text, stop!));
@@ -161,10 +168,11 @@ class _ManageStopState extends State<ManageStop> {
               ],
             ),
             Row(
+              // mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Container(
-                  padding: const EdgeInsets.only(left: 5),
-                  width: 80,
+                  padding: const EdgeInsets.only(left: 5, bottom: 10),
+                  width: 150,
                   child: TextField(
                     controller: textController,
                     maxLines: null,
@@ -201,6 +209,8 @@ class _ManageStopState extends State<ManageStop> {
             ),
             Expanded(
               child: GoogleMap(
+                tiltGesturesEnabled: false,
+                compassEnabled: false,
                 onMapCreated: (GoogleMapController controller) {
                   mapController = controller;
                   if (widget.stop == null) {

@@ -1,19 +1,16 @@
 import 'dart:collection';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:journey/insertMap.dart';
 import 'package:journey/insertStop.dart';
 import 'package:journey/tripprovider.dart';
 import 'package:provider/provider.dart';
-
 import 'model/trip.dart';
 
 class InsertTrip extends StatefulWidget {
-  const InsertTrip({super.key, this.trip});
+  const InsertTrip({super.key, this.trip, this.stops});
   final Trip? trip;
+  final LinkedHashMap<String, Stop>? stops;
   @override
   State<InsertTrip> createState() => _InsertTripState();
 }
@@ -23,12 +20,15 @@ class _InsertTripState extends State<InsertTrip> {
   Trip? currentTrip;
   late TripStopProvider tripStopDaoProvider;
   TextEditingController textController = TextEditingController();
-  double current_lat = 45.4869;
-  double current_lng = 12.3768;
-  double _rotation = 0;
+  final double precision = 0.0001;
   @override
   initState() {
     super.initState();
+    if (widget.trip != null && widget.stops != null) {
+      currentTrip = widget.trip;
+      textController.text = currentTrip!.name;
+      stops = LinkedHashMap<String, Stop>.from(widget.stops!);
+    }
   }
 
   @override
@@ -48,7 +48,10 @@ class _InsertTripState extends State<InsertTrip> {
             Container(
                 child: Column(
               children: [
-                const Text("Trip Name:"),
+                const Text(
+                  "Trip Name:",
+                  style: TextStyle(fontSize: 20),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -73,13 +76,33 @@ class _InsertTripState extends State<InsertTrip> {
                       },
                     ),
                     Center(
-                      child: Container(
-                        width: 250,
+                      child: SizedBox(
+                        width: 200,
                         child: TextField(
                           controller: textController,
                           maxLines: null,
                         ),
                       ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.check,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          if (currentTrip == null) {
+                            currentTrip = Trip(
+                                name: textController.text,
+                                updated: DateTime.now());
+                            // currentTrip!.id = tripStopDaoProvider.insertTrip(currentTrip!);
+                          } else {
+                            currentTrip!.name = textController.text;
+                            currentTrip!.updated = DateTime.now();
+                            // tripStopDaoProvider.updateTrip(currentTrip!);
+                          }
+                        });
+                      },
                     ),
                     IconButton(
                       icon: const Icon(
@@ -93,20 +116,59 @@ class _InsertTripState extends State<InsertTrip> {
                                   "Please insert a name for the trip before saving")));
                           return;
                         }
-                        currentTrip!.id =
-                            await tripStopDaoProvider.insertTrip(currentTrip!);
+                        if (widget.trip != null) {
+                          await tripStopDaoProvider.updateTrip(currentTrip!);
+                          if (widget.stops != null) {
+                            // remove all the saved stops that are not in the new list
+                            List<TripStop> output = await tripStopDaoProvider
+                                .getTripStopForTrip(currentTrip!.id!);
+                            // for (var element in widget.stops!.entries) {
+                            //   if (!stops.values
+                            //       .contains(element.value)) {
+                            //   TripStop? sus = await tripStopDaoProvider
+                            //       .getTripStopForStop(element.value.id!);
+                            //   output.add(sus!);
+                            // }
+                            for (var element in output) {
+                              await tripStopDaoProvider.deleteTripStop(element);
+                            }
+                          }
+                        } else {
+                          currentTrip!.id = await tripStopDaoProvider
+                              .insertTrip(currentTrip!);
+                        }
+                        //insert all the stops with the trip id
+                        for (var i = 0; i < stops.length; i++) {
+                          var key = stops.keys.elementAt(i);
+                          Stop stop = stops.values.elementAt(i);
 
-                        stops.forEach((key, value) async {
-                          value.id =
-                              await tripStopDaoProvider.insertStop(value);
+                          if (stop.id != null) {
+                            await tripStopDaoProvider.updateStop(stop);
+                            //tofix
+                            await tripStopDaoProvider.insertTripStop(TripStop(
+                                trip_id: currentTrip!.id!,
+                                stop_id: stop.id!,
+                                name_stop: key));
+                            continue;
+                          }
+                          //+- 0.0001 is about 13 meters in all directions
+                          List<Stop> possibleStops = await tripStopDaoProvider
+                              .getAllStopsNear(stop.lat, stop.lng, precision);
+
+                          if (possibleStops.isNotEmpty) {
+                            stop = possibleStops.first;
+                          } else {
+                            stop.id =
+                                await tripStopDaoProvider.insertStop(stop);
+                          }
                           await tripStopDaoProvider.insertTripStop(TripStop(
                               trip_id: currentTrip!.id!,
-                              stop_id: value.id!,
+                              stop_id: stop.id!,
                               name_stop: key));
-                        });
-                        Navigator.pop(context);
-
-                        print(current_lng);
+                        }
+                        ;
+                        // ignore: use_build_context_synchronously
+                        Navigator.pop(context, currentTrip);
                       },
                     ),
                   ],
@@ -134,6 +196,14 @@ class _InsertTripState extends State<InsertTrip> {
               },
             ),
             // const Text("Stops for this Trip:"),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Stops:",
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.left,
+              ),
+            ),
             Expanded(
               child: ReorderableListView(
                 shrinkWrap: true,
@@ -141,7 +211,8 @@ class _InsertTripState extends State<InsertTrip> {
                   var key = stops.keys.elementAt(oldIndex);
                   var item = {key: stops.remove(key)!};
                   var i = 0;
-                  var newMap = LinkedHashMap<String, Stop>();
+                  // ignore: prefer_collection_literals
+                  LinkedHashMap<String, Stop> newMap = LinkedHashMap();
                   stops.forEach((key, value) {
                     if (i == newIndex) {
                       newMap.addAll(item);
@@ -161,14 +232,14 @@ class _InsertTripState extends State<InsertTrip> {
                     (index) => Dismissible(
                           onDismissed: (direction) {
                             // Remove the item from the data source.
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text(
+                                    '${stops.keys.elementAt(index)} deleted')));
                             setState(() {
                               stops.remove(stops.keys.elementAt(index));
                             });
 
                             // Then show a snackbar.
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text(
-                                    '${stops.keys.elementAt(index)} dismissed')));
                           },
                           key: Key(stops.keys.elementAt(index)),
                           background: Container(color: Colors.red),
@@ -199,7 +270,9 @@ class _InsertTripState extends State<InsertTrip> {
             ),
             InsertMap(
               stopList: stops,
-              key: Key(stops.hashCode.toString() + stops.length.toString()),
+              key: Key(stops.hashCode.toString() +
+                  stops.length.toString() +
+                  stops.values.hashCode.toString()),
             )
           ],
         ),

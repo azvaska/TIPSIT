@@ -49,8 +49,6 @@ dependencies:
   geocoding: ^2.0.5
   flutter_randomcolor: ^1.0.14
   url_launcher: ^6.1.10
-  maps_launcher: ^2.2.0
-
 dev_dependencies:
   flutter_test:
     sdk: flutter

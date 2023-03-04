@@ -32,12 +32,22 @@ abstract class TripStopDao {
   @Query(
       'SELECT * FROM stops INNER JOIN trip_stop ON stops.id = trip_stop.stop_id WHERE trip_stop.trip_id = :tripId')
   Future<List<Stop>> getStopsForTrip(int tripId);
+  @Query(
+      'SELECT * FROM stops where lat > :lat - :limit and lat < :lat + :limit and lng > :lng - :limit and lng < :lng + :limit limit 1')
+  Future<List<Stop>> getAllStopsNear(double lat, double lng, double limit);
+
+  @Query('SELECT * FROM trip_stop WHERE trip_stop.trip_id = :tripId')
+  Future<List<TripStop>> getTripStopForTrip(int tripId);
+  @Query('SELECT * FROM trip_stop WHERE trip_stop.stop_id = :stopId')
+  Future<TripStop?> getTripStopForStop(int stopId);
 
   @Insert(onConflict: OnConflictStrategy.ignore)
   Future<void> insertTripStop(TripStop tripStop);
 
   @update
   Future<void> updateTripStop(TripStop tripStop);
+  @delete
+  Future<void> deleteTripStop(TripStop tripStop);
 }
 
 @dao

@@ -18,7 +18,7 @@ class TripStopProvider extends ChangeNotifier {
     return _tripDao.findAllTrips();
   }
 
-  Future<List<Stop>> getStops() async {
+  Future<List<Stop>> getStops([int? id]) async {
     return _stopDao.findAllStops();
   }
 
@@ -26,8 +26,26 @@ class TripStopProvider extends ChangeNotifier {
     return _tripStopDao.getStopsForTrip(tripId);
   }
 
+  Future<List<TripStop>> getTripStopForTrip(int tripId) async {
+    return _tripStopDao.getTripStopForTrip(tripId);
+  }
+
+  Future<TripStop?> getTripStopForStop(int tripId) async {
+    return _tripStopDao.getTripStopForStop(tripId);
+  }
+
+  Future<List<Stop>> getAllStopsNear(double lat, double lng, double limit) {
+    return _tripStopDao.getAllStopsNear(lat, lng, limit);
+  }
+
   Future<void> updateStop(Stop stop) async {
-    var k = _stopDao.updateStop(stop);
+    var k = await _stopDao.updateStop(stop);
+    notifyListeners();
+    return k;
+  }
+
+  Future<void> updateTrip(Trip trip) async {
+    var k = await _tripDao.updateTrip(trip);
     notifyListeners();
     return k;
   }
@@ -39,14 +57,31 @@ class TripStopProvider extends ChangeNotifier {
   }
 
   Future<int> insertStop(Stop stop) async {
-    var k = _stopDao.insertStop(stop);
+    var k = await _stopDao.insertStop(stop);
     notifyListeners();
     return k;
   }
 
   Future<void> insertTripStop(TripStop tripstop) async {
-    var k = _tripStopDao.insertTripStop(tripstop);
+    var k = await _tripStopDao.insertTripStop(tripstop);
     notifyListeners();
     return k;
+  }
+
+  Future<void> deleteTripStop(TripStop tripstop) async {
+    // notifyListeners();
+    return _tripStopDao.deleteTripStop(tripstop);
+  }
+
+  Future<void> deleteTrip(Trip trip) async {
+    List<Stop> stops = await _tripStopDao.getStopsForTrip(trip.id!);
+
+    await _tripDao.deleteTrip(trip);
+    stops.forEach((element) {
+      _tripStopDao.getTripsForStop(element.id!).then((value) {
+        if (value.isEmpty) _stopDao.deleteStop(element);
+      });
+    });
+    notifyListeners();
   }
 }

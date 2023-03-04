@@ -1,14 +1,12 @@
 import 'dart:collection';
 
+import 'package:floor/floor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:flutter_randomcolor/flutter_randomcolor.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:journey/util.dart';
-import 'package:maps_launcher/maps_launcher.dart';
 import 'dart:math' as math;
-import 'package:permission_handler/permission_handler.dart';
 import 'model/trip.dart';
 import 'dart:math' as math;
 import 'package:url_launcher/url_launcher.dart';
@@ -22,7 +20,7 @@ class InsertMap extends StatefulWidget {
 
 class _InsertMapState extends State<InsertMap> {
   late CameraPosition _kInitialPosition;
-  Set<Marker> _markers = Set();
+  Set<Marker> _markers = {};
   late PolylinePoints polylinePoints;
 
 // List of coordinates to join
@@ -131,6 +129,7 @@ class _InsertMapState extends State<InsertMap> {
       ));
       polylines[line.keys.first] = line.values.first;
     }
+    if (!mounted) return;
     setState(() {});
   }
 
@@ -156,31 +155,64 @@ class _InsertMapState extends State<InsertMap> {
     // TODO: implement initState
     super.initState();
     if (widget.stopList.isNotEmpty) {
+      var firstValue = widget.stopList.entries.first;
       load_state();
       _kInitialPosition = CameraPosition(
-          target: LatLng(widget.stopList.entries.first.value.lat,
-              widget.stopList.entries.first.value.lng),
+          target: LatLng(firstValue.value.lat, firstValue.value.lng),
           zoom: 5.0,
           tilt: 0,
           bearing: 0);
+      _markers.add(Marker(
+        position: LatLng(firstValue.value.lat, firstValue.value.lng),
+        markerId: MarkerId(firstValue.key),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        infoWindow: InfoWindow(
+          title: firstValue.key,
+          snippet: firstValue.value.address,
+        ),
+      ));
+      latlonlist.add(LatLng(
+        firstValue.value.lat,
+        firstValue.value.lng,
+      ));
+      for (var i = 1; i < widget.stopList.entries.length - 1; i++) {
+        MapEntry<String, Stop> entry = widget.stopList.entries.elementAt(i);
+        latlonlist.add(LatLng(
+          entry.value.lat,
+          entry.value.lng,
+        ));
+        _markers.add(Marker(
+          position: LatLng(entry.value.lat, entry.value.lng),
+          markerId: MarkerId(entry.key),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+          infoWindow: InfoWindow(
+            title: entry.key,
+            snippet: entry.value.address,
+          ),
+        ));
+      }
+      if (widget.stopList.entries.length > 1) {
+        latlonlist.add(LatLng(
+          widget.stopList.entries.last.value.lat,
+          widget.stopList.entries.last.value.lng,
+        ));
+        _markers.add(Marker(
+          position: LatLng(widget.stopList.entries.last.value.lat,
+              widget.stopList.entries.last.value.lng),
+          markerId: MarkerId(widget.stopList.entries.last.key),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          infoWindow: InfoWindow(
+            title: widget.stopList.entries.last.key,
+            snippet: widget.stopList.entries.last.value.address,
+          ),
+        ));
+      }
     } else {
       _kInitialPosition = const CameraPosition(
           target: LatLng(45.4935, 12.2463), zoom: 8.0, tilt: 0, bearing: 0);
     }
-    _markers = widget.stopList.entries.map((entry) {
-      latlonlist.add(LatLng(
-        entry.value.lat,
-        entry.value.lng,
-      ));
-      return Marker(
-        position: LatLng(entry.value.lat, entry.value.lng),
-        markerId: MarkerId(entry.key),
-        infoWindow: InfoWindow(
-          title: entry.key,
-          snippet: entry.value.address,
-        ),
-      );
-    }).toSet();
+    if (widget.stopList.entries.isNotEmpty) {}
   }
 
   Widget build(BuildContext context) {

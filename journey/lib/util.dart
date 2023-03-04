@@ -20,7 +20,12 @@ class MapUtils {
   //
   static LatLngBounds boundsFromLatLngList(List<LatLng> list) {
     double north, south, east, west;
-
+    if (list.isEmpty) {
+      return LatLngBounds(
+        southwest: LatLng(45, 12),
+        northeast: LatLng(46, 13),
+      );
+    }
     // initialize bounds with first coordinate
     north = south = list[0].latitude;
     east = west = list[0].longitude;

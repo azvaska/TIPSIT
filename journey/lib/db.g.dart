@@ -47,8 +47,6 @@ class _$AppDatabaseBuilder {
         ? await sqfliteDatabaseFactory.getDatabasePath(name!)
         : ':memory:';
     final database = _$AppDatabase();
-    String dbPath = path;
-    print('db location : ' + dbPath);
     database.database = await database.open(
       path,
       _migrations,
@@ -95,7 +93,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `stops` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `lat` REAL NOT NULL, `lng` REAL NOT NULL, `address` TEXT NOT NULL)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `trip_stop` (`trip_id` INTEGER NOT NULL, `stop_id` INTEGER NOT NULL, FOREIGN KEY (`trip_id`) REFERENCES `trips` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY (`stop_id`) REFERENCES `stops` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE, PRIMARY KEY (`trip_id`, `stop_id`))');
+            'CREATE TABLE IF NOT EXISTS `trip_stop` (`trip_id` INTEGER NOT NULL, `stop_id` INTEGER NOT NULL, `name_stop` TEXT, FOREIGN KEY (`trip_id`) REFERENCES `trips` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY (`stop_id`) REFERENCES `stops` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE, PRIMARY KEY (`trip_id`, `stop_id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -225,7 +223,8 @@ class _$TripStopDao extends TripStopDao {
             'trip_stop',
             (TripStop item) => <String, Object?>{
                   'trip_id': item.trip_id,
-                  'stop_id': item.stop_id
+                  'stop_id': item.stop_id,
+                  'name_stop': item.name_stop
                 }),
         _tripStopUpdateAdapter = UpdateAdapter(
             database,
@@ -233,7 +232,17 @@ class _$TripStopDao extends TripStopDao {
             ['trip_id', 'stop_id'],
             (TripStop item) => <String, Object?>{
                   'trip_id': item.trip_id,
-                  'stop_id': item.stop_id
+                  'stop_id': item.stop_id,
+                  'name_stop': item.name_stop
+                }),
+        _tripStopDeletionAdapter = DeletionAdapter(
+            database,
+            'trip_stop',
+            ['trip_id', 'stop_id'],
+            (TripStop item) => <String, Object?>{
+                  'trip_id': item.trip_id,
+                  'stop_id': item.stop_id,
+                  'name_stop': item.name_stop
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -245,6 +254,8 @@ class _$TripStopDao extends TripStopDao {
   final InsertionAdapter<TripStop> _tripStopInsertionAdapter;
 
   final UpdateAdapter<TripStop> _tripStopUpdateAdapter;
+
+  final DeletionAdapter<TripStop> _tripStopDeletionAdapter;
 
   @override
   Future<List<Trip>> getTripsForStop(int stopId) async {
@@ -263,6 +274,40 @@ class _$TripStopDao extends TripStopDao {
   }
 
   @override
+  Future<List<Stop>> getAllStopsNear(
+    double lat,
+    double lng,
+    double limit,
+  ) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM stops where lat > ?1 - ?3 and lat < ?1 + ?3 and lng > ?2 - ?3 and lng < ?2 + ?3 limit 1',
+        mapper: (Map<String, Object?> row) => Stop(lat: row['lat'] as double, id: row['id'] as int?, lng: row['lng'] as double, address: row['address'] as String),
+        arguments: [lat, lng, limit]);
+  }
+
+  @override
+  Future<List<TripStop>> getTripStopForTrip(int tripId) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM trip_stop WHERE trip_stop.trip_id = ?1',
+        mapper: (Map<String, Object?> row) => TripStop(
+            trip_id: row['trip_id'] as int,
+            stop_id: row['stop_id'] as int,
+            name_stop: row['name_stop'] as String?),
+        arguments: [tripId]);
+  }
+
+  @override
+  Future<TripStop?> getTripStopForStop(int stopId) async {
+    return _queryAdapter.query(
+        'SELECT * FROM trip_stop WHERE trip_stop.stop_id = ?1',
+        mapper: (Map<String, Object?> row) => TripStop(
+            trip_id: row['trip_id'] as int,
+            stop_id: row['stop_id'] as int,
+            name_stop: row['name_stop'] as String?),
+        arguments: [stopId]);
+  }
+
+  @override
   Future<void> insertTripStop(TripStop tripStop) async {
     await _tripStopInsertionAdapter.insert(tripStop, OnConflictStrategy.ignore);
   }
@@ -270,6 +315,11 @@ class _$TripStopDao extends TripStopDao {
   @override
   Future<void> updateTripStop(TripStop tripStop) async {
     await _tripStopUpdateAdapter.update(tripStop, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> deleteTripStop(TripStop tripStop) async {
+    await _tripStopDeletionAdapter.delete(tripStop);
   }
 }
 
