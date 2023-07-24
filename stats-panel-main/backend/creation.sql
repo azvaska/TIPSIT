@@ -1,0 +1,8 @@
+CREATE TABLE users(
+    id INT NOT NULL AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL,
+    password VARCHAR(120) NOT NULL,
+    email VARCHAR(80) NOT NULL UNIQUE,
+    isadmin BOOLEAN DEFAULT false,
+    PRIMARY KEY (id)
+);

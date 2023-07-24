@@ -1,0 +1,28 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "127.0.0.1",
+            "port": 3306,
+            "driver": "MariaDB",
+            "name": "bubblys",
+            "database": "bubbly_stats",
+            "username": "root",
+            "password": "idroscimmia"
+        },
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "idrosc",
+            "database": "bubbly",
+            "username": "postgres",
+            "password": "12345"
+        }
+    ],
+    "python.formatting.provider": "autopep8"
+}

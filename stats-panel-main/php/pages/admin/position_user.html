@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Position Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/ol@v7.3.0/dist/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.3.0/ol.css">
+    <style>
+        #map {
+            height: 900px;
+        }
+    </style>
+</head>
+
+<body>
+    <input id="date_picker" data-time_24hr=true />
+    <input type="text" value="" id="user_id">
+
+    <input type="button" value="user_id" onclick="window.load_positions()">
+    <div id="map"></div>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+        integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+        integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        let datepicker = flatpickr("#date_picker", {
+            enableTime: true,
+            mode: "range",
+
+            dateFormat: "Y-m-d H:i",
+            defaultDate: ["today", "today"],
+        });
+        console.log(datepicker);
+        const map = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([12.321486037159337, 45.445290419889886]),
+                zoom: 15
+            })
+        });
+    </script>
+
+    <script>
+//     var map = L.map('map').setView([45.445290419889886, 12.321486037159337], 13);
+
+//     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+//       attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+//       maxZoom: 18,
+//       id: 'mapbox/streets-v11',
+//       tileSize: 512,
+//       zoomOffset: -1
+//     }).addTo(map);
+//     let positions=[];
+
+// // Define the colors to use for the gradient
+// var colors = ['#00FF00', '#FF0000'];
+
+// // Define the values at which to change colors along the polyline
+// var gradientStops = [0, 1];
+
+// // Create the polyline with the gradient
+// var polyline = L.polyline.gradient(positions, {
+//     gradient: {
+//         stops: gradientStops,
+//         colors: colors
+//     },
+//     weight: 10
+// }).addTo(map);
+//     setInterval(function() {
+//       axios.get('/positions.php')
+//         .then(function(response) {
+//           var positions = response.data;
+
+//           // Filter positions from the last 24 hours
+//           var now = new Date();
+//           var last24h = new Date(now - 24 * 60 * 60 * 1000);
+//           var filteredPositions = positions.filter(function(pos) {
+//             var date = new Date(pos.timestamp);
+//             return date >= last24h;
+//           });
+
+//           // Clear previous markers
+//           map.eachLayer(function(layer) {
+//             if (layer instanceof L.Marker) {
+//               map.removeLayer(layer);
+//             }
+//           });
+
+//           // Add markers for filtered positions
+//           filteredPositions.forEach(function(pos) {
+//             var marker = L.marker([pos.latitude, pos.longitude]);
+//             marker.addTo(map);
+//           });
+//         })
+//         .catch(function(error) {
+//           console.error(error);
+//         });
+//     }, 300000); // Refresh every 5 minutes
+    </script>
+    <script>
+        function load_positions() {
+            console.log("load_positions");
+            var date = document.getElementById("date_picker").value.split(" to ");
+            let start_date = new Date(date[0]).valueOf();
+            let end_date = new Date(date[1]).valueOf();
+            console.log(start_date, end_date);
+            var user_id = document.getElementById("user_id").value;
+            if (user_id == "") {
+                console.log("user_id is empty");
+                return;
+            }
+            console.log(user_id);
+            fetch('/stats-panel/backend/api/position/get_user_position.php?start_date=' + start_date + '&end_date=' + end_date + '&user_id=' + user_id)
+                .then((response) => response.json())
+                .then((data_2) => {
+
+                    let positions = [];
+
+                    var markers_layer = new ol.layer.Vector({
+                        source: new ol.source.Vector(),
+                        // style: new ol.style.Style({
+                        //   image: new ol.style.Icon({
+                        //     anchor: [0.5, 1],
+                        //     src: 'marker.png'
+                        //   })
+                        // })
+                    });
+
+                    for (let i = 0; i < data_2.length; i++) {
+                        pos = data_2[i];
+                        positions.push(ol.proj.fromLonLat([pos.lng, pos.lat]));
+                        if (i == 0) {
+                            var marker = new ol.Feature(new ol.geom.Point(ol.proj.fromLonLat([pos.lng, pos.lat])));
+                            marker.setStyle(new ol.style.Style({
+                                image: new ol.style.Icon({
+                                    anchor: [0.5, 1],
+                                    src: 'https://openlayers.org/en/latest/examples/data/icon.png'
+                                })
+                            }));
+                        } else {
+                            if (i == data_2.length - 1) {
+                                var marker = new ol.Feature(new ol.geom.Point(ol.proj.fromLonLat([pos.lng, pos.lat])));
+                                marker.setStyle(new ol.style.Style({
+                                    color: '#3399CC',
+
+                                    image: new ol.style.Icon({
+                                        anchor: [0.5, 1],
+                                        src: 'flag.png'
+                                    })
+                                }));
+                            } else {
+                                var marker = new ol.Feature(new ol.geom.Point(ol.proj.fromLonLat([pos.lng, pos.lat])));
+                            }
+                        }
+                        markers_layer.getSource().addFeature(marker);
+
+                    };
+
+                    map.addLayer(markers_layer);
+
+                    const feature = new ol.Feature({
+                        geometry: new ol.geom.LineString(positions)
+                    });
+
+                    // Set the style function for the feature
+                    // Create a vector layer with the feature
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    const gradient = context.createLinearGradient(0, 0, 1024, 0);
+                    gradient.addColorStop(0, 'red');
+                    gradient.addColorStop(1 / 6, 'orange');
+                    gradient.addColorStop(2 / 6, 'yellow');
+                    gradient.addColorStop(3 / 6, 'green');
+                    gradient.addColorStop(4 / 6, 'aqua');
+                    gradient.addColorStop(5 / 6, 'blue');
+                    gradient.addColorStop(1, 'purple');
+                    const vectorLayer = new ol.layer.Vector({
+                        style: {
+                            'stroke-width': 4,
+                            'stroke-color': gradient,
+                        }, source: new ol.source.Vector({
+                            features: [feature]
+                        })
+                    });
+
+                    // Add the vector layer to the map
+                    map.addLayer(vectorLayer);
+                });
+        }
+    </script>
+</body>
+
+</html>

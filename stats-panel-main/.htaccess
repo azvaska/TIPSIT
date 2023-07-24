@@ -1,0 +1,26 @@
+AddDefaultCharSet utf-8
+php_value default_charset utf-8
+
+# RewriteCond %{REQUEST_URI} !\.(css|js|php|html|png)$ [NC]
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+
+RewriteCond %{REQUEST_URI} !\.png$ [NC]
+RewriteCond %{REQUEST_URI} !\.html$ [NC]
+RewriteCond %{REQUEST_URI} !\.php$ [NC]
+RewriteCond %{REQUEST_URI} !\.css$ [NC]
+RewriteCond %{REQUEST_URI} !\.jpg$ [NC]
+RewriteCond %{REQUEST_URI} !^/backend/
+# RewriteCond %{REQUEST_FILENAME} !-l
+
+
+
+RewriteEngine On
+RewriteRule ^(?!backend/)([^/]*)$ /?q=$1 [L,QSA]
+RewriteRule ^(?!backend/)([^/]*)/([^/]*)$ /?q=$1&q1=$2 [L,QSA]
+RewriteRule ^(?!backend/)([^/]*)/([^/]*)/([^/]*)$ /?q=$1&q1=$2&q2=$3 [L,QSA]
+
+
+
+# RewriteCond %{HTTP_HOST} ^.*$
+# RewriteRule ^/?$ "https\:\/\/www\.ophirstudio\.com\/" [R=301,L]

@@ -1,0 +1,193 @@
+@property --gradient-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+
+:root {
+    --blue: #5E9FFF;
+    --c1: #ff0000;
+    --c2: #C80CF2;
+    --c3: #000FDB;
+    --gradient-angle: 0deg;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 17px;
+    background: #0f0f0f;
+    /* background: #000000; */
+
+    background-image: radial-gradient(var(--blue) 1px, transparent 0);
+
+    background-size: 40px 40px;
+    /* text-align: center; */
+    display: grid;
+    place-content: center;
+    min-height: 100vh;
+    overflow: hidden; 
+}
+
+
+
+@keyframes rotation {
+    0% {
+        --gradient-angle: 0deg;
+    }
+
+    100% {
+        --gradient-angle: 360deg;
+    }
+}
+
+.card {
+    height: 60vh;
+    aspect-ratio: 1 / 1.5;
+    background-color: #ffffff;
+    border-radius: 1.5rem;
+    position: relative;
+}
+
+.card::before,
+.card::after {
+    content: "";
+    position: absolute;
+    inset: -.3rem;
+    z-index: -1;
+    background: conic-gradient(from var(--gradient-angle),
+            var(--c1),
+            var(--c2),
+            var(--c3),
+            var(--c2),
+            var(--c1));
+    border-radius: inherit;
+    animation: rotation 10s linear infinite;
+}
+
+.card::after {
+    filter: blur(3.5rem);
+}
+
+form {
+    padding: 10%;
+    text-align: center;
+    color: #5E9FFF;
+    text-align: center;
+    font-weight: 600;
+}
+
+form>* {
+    display: flex;
+    margin: 2px;
+}
+
+input {
+    border-radius: 30px;
+    width: 80%;
+    height: 3vh;
+    border: 0;
+    padding: 8px 10px;
+    background-color: #D9D9D9;
+    color: rgba(0, 0, 0, 0.5);
+    -webkit-box-shadow: -1px 3px 3px 0px rgba(0,0,0,0.28); 
+    box-shadow: -1px 3px 3px 0px rgba(0,0,0,0.28);
+}
+
+.textfield {
+    display: flex;
+    flex-direction: column;
+    margin: 2px;
+    align-items:center;
+}
+
+h1 {
+    /* color: var(--blue); */
+    font-weight: bold;
+    padding: 5px;
+    border-radius: 1rem;
+    display: block;
+    font-family: 'Space Mono', monospace;
+}
+
+hr {
+    margin: 1rem 0 6rem 0;
+}
+
+@keyframes rotate {
+    from {
+      rotate: 0deg;
+    }
+    
+    50% {
+      scale: 1 1.5;
+    }
+    
+    to {
+      rotate: 360deg;
+    }
+  }
+  
+  #blob {
+    background-color: white;
+    height: 20vmax;
+    aspect-ratio: 1;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    position: absolute;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: linear-gradient(to right, var(--c1), var(--c3));
+    animation: rotate 20s infinite;
+    opacity: 0.8;
+    filter: blur(10rem);
+  }
+  
+  /* #blur {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    z-index: -1;
+    backdrop-filter: blur(12vmax);
+  } */
+
+button {
+    background-color: #121212;
+    /* background: #1f1f1f; */
+    /* padding: 5px; */
+    border-radius: 1.5rem;
+
+    border: 0;
+    color: white;
+    font-weight: bold;
+    font-size: 17px;
+    padding: 5px 10px;
+    margin: 2rem auto 0 auto;
+    cursor: pointer;
+
+    position: relative;
+}
+
+#user {
+    padding-bottom: 40px;
+}
+
+
+#loginbutton {
+    width: 12vw;
+    height: 8vh;
+    border-radius: 30px;
+    background-color: #5E9FFF;
+    color: rgba(0, 0, 0, 0.5);
+    font-weight: bold;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    padding: 5px 10px;
+    margin: 2rem auto 0 auto;
+    cursor: pointer;
+    -webkit-box-shadow: -1px 3px 3px 0px rgba(0,0,0,0.28); 
+    box-shadow: -1px 3px 3px 0px rgba(0,0,0,0.28);
+}

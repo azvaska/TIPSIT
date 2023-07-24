@@ -1,0 +1,31 @@
+[{
+    "_id": {
+      "$oid": "646961bb5c8e3d0710171adc"
+    },
+    "user_id": "5a0b04b3-219a-4967-a0d6-bed1f5dde41b",
+    "geo_point": {
+      "type": "point",
+      "coordinates": [
+        11.91277858607901,
+        45.84161055547891
+      ]
+    },
+    "timestamp": {
+      "$date": "2023-05-25T00:00:00Z"
+    }
+  },{
+    "_id": {
+      "$oid": "646961bb5c8e3d0710171ae1"
+    },
+    "user_id": "5a0b04b3-219a-4967-a0d6-bed1f5dde41b",
+    "geo_point": {
+      "type": "point",
+      "coordinates": [
+        11.910442995621684,
+        45.837568359012266
+      ]
+    },
+    "timestamp": {
+      "$date": "2023-05-25T00:13:24Z"
+    }
+  }]
